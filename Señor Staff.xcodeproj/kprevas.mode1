@@ -267,8 +267,6 @@
 			<key>Layout</key>
 			<array>
 				<dict>
-					<key>BecomeActive</key>
-					<true/>
 					<key>ContentConfiguration</key>
 					<dict>
 						<key>PBXBottomSmartGroupGIDs</key>
@@ -364,12 +362,14 @@
 					<key>Dock</key>
 					<array>
 						<dict>
+							<key>BecomeActive</key>
+							<true/>
 							<key>ContentConfiguration</key>
 							<dict>
 								<key>PBXProjectModuleGUID</key>
 								<string>1CE0B20306471E060097A5F4</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>NoteDraw.m</string>
+								<string>Song.m</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -377,11 +377,11 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>1CE0B20406471E060097A5F4</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>NoteDraw.m</string>
+										<string>Song.m</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>7856C05C0B37C24400967208</string>
+										<string>7856C0E30B37C3B200967208</string>
 										<key>history</key>
 										<array>
 											<string>786A94AD0A8999830006F54C</string>
@@ -479,7 +479,6 @@
 											<string>78A3F3540B34A56800EAF26A</string>
 											<string>78A3F3550B34A56800EAF26A</string>
 											<string>78A3F3BD0B34D34000EAF26A</string>
-											<string>78A3F3BF0B34D34000EAF26A</string>
 											<string>783BF2730B3605520002AD5E</string>
 											<string>783BF2A90B3607070002AD5E</string>
 											<string>783BF3120B3615BA0002AD5E</string>
@@ -515,7 +514,8 @@
 											<string>7856C03D0B37C16600967208</string>
 											<string>7856C03E0B37C16600967208</string>
 											<string>7856C0550B37C21C00967208</string>
-											<string>7856BEE80B367B3B00967208</string>
+											<string>7856C0E10B37C3B200967208</string>
+											<string>78A3F3BF0B34D34000EAF26A</string>
 										</array>
 										<key>prevStack</key>
 										<array>
@@ -678,6 +678,7 @@
 											<string>7856C04A0B37C16600967208</string>
 											<string>7856C04B0B37C16600967208</string>
 											<string>7856C0560B37C21C00967208</string>
+											<string>7856C0E20B37C3B200967208</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -856,7 +857,7 @@
 	<key>StatusbarIsVisible</key>
 	<true/>
 	<key>TimeStamp</key>
-	<real>188203588.50333101</real>
+	<real>188203954.767645</real>
 	<key>ToolbarDisplayMode</key>
 	<integer>1</integer>
 	<key>ToolbarIsVisible</key>
@@ -871,17 +872,16 @@
 	<integer>5</integer>
 	<key>WindowOrderList</key>
 	<array>
-		<string>7856C0580B37C21C00967208</string>
 		<string>7856C0530B37C21900967208</string>
 		<string>7856BFA50B37B6C600967208</string>
 		<string>7856BFA60B37B6C600967208</string>
 		<string>78683B020A0E97EE001DE5BB</string>
+		<string>1CD10A99069EF8BA00B06720</string>
 		<string>7856BF9F0B37B68E00967208</string>
-		<string>788317EF0A617516003363D7</string>
 		<string>1C0AD2B3069F1EA900FABCE6</string>
+		<string>788317EF0A617516003363D7</string>
 		<string>/Users/kprevas/Señor Staff/trunk/Señor Staff.xcodeproj</string>
 		<string>7841FD130A09CEAA00292132</string>
-		<string>1CD10A99069EF8BA00B06720</string>
 	</array>
 	<key>WindowString</key>
 	<string>64 55 1373 823 0 0 1440 878 </string>
@@ -905,7 +905,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>1CD0528F0623707200166675</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>DrumKit.m</string>
+								<string>Song.m</string>
 								<key>StatusBarVisibility</key>
 								<true/>
 							</dict>
@@ -1087,7 +1087,7 @@
 			<key>WindowToolGUID</key>
 			<string>1CD10A99069EF8BA00B06720</string>
 			<key>WindowToolIsVisible</key>
-			<true/>
+			<false/>
 		</dict>
 		<dict>
 			<key>FirstTimeWindowDisplayed</key>
@@ -1425,7 +1425,7 @@
 			<key>WindowToolGUID</key>
 			<string>788317EF0A617516003363D7</string>
 			<key>WindowToolIsVisible</key>
-			<false/>
+			<true/>
 		</dict>
 		<dict>
 			<key>FirstTimeWindowDisplayed</key>

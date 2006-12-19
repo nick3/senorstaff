@@ -9,7 +9,7 @@
 		};
 	};
 	2A37F4A9FDCFA73011CA2CEA /* Project object */ = {
-		activeBuildConfigurationName = Debug;
+		activeBuildConfigurationName = Release;
 		activeExecutable = 7841FCEE0A09C4D600292132 /* Señor Staff */;
 		activeTarget = 8D15AC270486D014006FF6A4 /* Señor Staff */;
 		addToTargets = (
@@ -646,6 +646,18 @@
 			7856C05C0B37C24400967208 /* PBXTextBookmark */ = 7856C05C0B37C24400967208 /* PBXTextBookmark */;
 			7856C05F0B37C29A00967208 /* PBXTextBookmark */ = 7856C05F0B37C29A00967208 /* PBXTextBookmark */;
 			7856C0600B37C29C00967208 /* PBXTextBookmark */ = 7856C0600B37C29C00967208 /* PBXTextBookmark */;
+			7856C0D70B37C35F00967208 /* PBXTextBookmark */ = 7856C0D70B37C35F00967208 /* PBXTextBookmark */;
+			7856C0D80B37C35F00967208 /* PBXTextBookmark */ = 7856C0D80B37C35F00967208 /* PBXTextBookmark */;
+			7856C0D90B37C35F00967208 /* PBXTextBookmark */ = 7856C0D90B37C35F00967208 /* PBXTextBookmark */;
+			7856C0DA0B37C35F00967208 /* PBXTextBookmark */ = 7856C0DA0B37C35F00967208 /* PBXTextBookmark */;
+			7856C0DB0B37C35F00967208 /* PBXTextBookmark */ = 7856C0DB0B37C35F00967208 /* PBXTextBookmark */;
+			7856C0DC0B37C35F00967208 /* PBXTextBookmark */ = 7856C0DC0B37C35F00967208 /* PBXTextBookmark */;
+			7856C0DD0B37C35F00967208 /* PBXTextBookmark */ = 7856C0DD0B37C35F00967208 /* PBXTextBookmark */;
+			7856C0DE0B37C35F00967208 /* PBXTextBookmark */ = 7856C0DE0B37C35F00967208 /* PBXTextBookmark */;
+			7856C0DF0B37C36000967208 /* PBXTextBookmark */ = 7856C0DF0B37C36000967208 /* PBXTextBookmark */;
+			7856C0E10B37C3B200967208 /* PBXTextBookmark */ = 7856C0E10B37C3B200967208 /* PBXTextBookmark */;
+			7856C0E20B37C3B200967208 /* PBXTextBookmark */ = 7856C0E20B37C3B200967208 /* PBXTextBookmark */;
+			7856C0E30B37C3B200967208 /* PBXTextBookmark */ = 7856C0E30B37C3B200967208 /* PBXTextBookmark */;
 			786400CB0AA26D300015A0AC = 786400CB0AA26D300015A0AC /* PBXTextBookmark */;
 			786400CC0AA26D300015A0AC = 786400CC0AA26D300015A0AC /* PBXTextBookmark */;
 			7864013C0AA27C6C0015A0AC = 7864013C0AA27C6C0015A0AC /* PBXTextBookmark */;
@@ -898,7 +910,7 @@
 		fRef = 7841FD8B0A0B08B800292132 /* Song.m */;
 		name = TimeSignature;
 		rLen = 13;
-		rLoc = 10038;
+		rLoc = 10099;
 		rType = 0;
 		vrLen = 1369;
 		vrLoc = 6165;
@@ -1629,17 +1641,17 @@
 	};
 	7841FD8A0A0B08B800292132 /* Song.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1065, 924}}";
+			sepNavIntBoundsRect = "{{0, 0}, {1330, 924}}";
 			sepNavSelRange = "{684, 0}";
-			sepNavVisRect = "{{0, 168}, {1065, 745}}";
+			sepNavVisRect = "{{0, 503}, {1330, 421}}";
 			sepNavWindowFrame = "{{330, 100}, {500, 716}}";
 		};
 	};
 	7841FD8B0A0B08B800292132 /* Song.m */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1330, 5726}}";
-			sepNavSelRange = "{10700, 10}";
-			sepNavVisRect = "{{0, 5221}, {1330, 338}}";
+			sepNavIntBoundsRect = "{{0, 0}, {1065, 5768}}";
+			sepNavSelRange = "{3091, 0}";
+			sepNavVisRect = "{{0, 1435}, {1065, 745}}";
 			sepNavWindowFrame = "{{363, 106}, {562, 694}}";
 		};
 	};
@@ -5827,6 +5839,124 @@
 		rType = 0;
 		vrLen = 728;
 		vrLoc = 547;
+	};
+	7856C0D70B37C35F00967208 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 786BD6C40B238FAB002D16A3 /* DrumKit.m */;
+		name = "DrumKit.m: 37";
+		rLen = 0;
+		rLoc = 982;
+		rType = 0;
+		vrLen = 728;
+		vrLoc = 547;
+	};
+	7856C0D80B37C35F00967208 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 7841FD8A0A0B08B800292132 /* Song.h */;
+		name = "Song.h: tempoData";
+		rLen = 0;
+		rLoc = 684;
+		rType = 0;
+		vrLen = 1128;
+		vrLoc = 684;
+	};
+	7856C0D90B37C35F00967208 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		comments = "error: parse error before '[' token";
+		fRef = 7841FD8B0A0B08B800292132 /* Song.m */;
+		rLen = 1;
+		rLoc = 393;
+		rType = 1;
+	};
+	7856C0DA0B37C35F00967208 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 786BD6C40B238FAB002D16A3 /* DrumKit.m */;
+		name = "DrumKit.m: 37";
+		rLen = 0;
+		rLoc = 982;
+		rType = 0;
+		vrLen = 728;
+		vrLoc = 547;
+	};
+	7856C0DB0B37C35F00967208 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 7841FD8B0A0B08B800292132 /* Song.m */;
+		name = "Song.m: 211";
+		rLen = 0;
+		rLoc = 5680;
+		rType = 0;
+		vrLen = 865;
+		vrLoc = 5252;
+	};
+	7856C0DC0B37C35F00967208 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 7841FD8A0A0B08B800292132 /* Song.h */;
+		name = "Song.h: tempoData";
+		rLen = 0;
+		rLoc = 684;
+		rType = 0;
+		vrLen = 1128;
+		vrLoc = 684;
+	};
+	7856C0DD0B37C35F00967208 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 7841FD8B0A0B08B800292132 /* Song.m */;
+		name = "Song.m: 394";
+		rLen = 0;
+		rLoc = 10778;
+		rType = 0;
+		vrLen = 806;
+		vrLoc = 10217;
+	};
+	7856C0DE0B37C35F00967208 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 7841FD8B0A0B08B800292132 /* Song.m */;
+		name = "Song.m: 394";
+		rLen = 0;
+		rLoc = 10778;
+		rType = 0;
+		vrLen = 806;
+		vrLoc = 10217;
+	};
+	7856C0DF0B37C36000967208 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 7841FD8B0A0B08B800292132 /* Song.m */;
+		name = "Song.m: 394";
+		rLen = 0;
+		rLoc = 10778;
+		rType = 0;
+		vrLen = 806;
+		vrLoc = 10217;
+	};
+	7856C0E10B37C3B200967208 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 786EB99E0A787985009D63DD /* NoteDraw.m */;
+		name = "[self draw:note inMeasure:measure atIndex:index isTarget:((target == note) || [[note getControllerClass] isSelected:note inSelection:selection])";
+		rLen = 146;
+		rLoc = 6509;
+		rType = 0;
+		vrLen = 2492;
+		vrLoc = 5767;
+	};
+	7856C0E20B37C3B200967208 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 786EB99E0A787985009D63DD /* NoteDraw.m */;
+		name = "[self draw:note inMeasure:measure atIndex:index isTarget:((target == note) || [[note getControllerClass] isSelected:note inSelection:selection])";
+		rLen = 146;
+		rLoc = 6509;
+		rType = 0;
+		vrLen = 2492;
+		vrLoc = 5767;
+	};
+	7856C0E30B37C3B200967208 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 7841FD8B0A0B08B800292132 /* Song.m */;
+		name = "Song.m: setTempoData:";
+		rLen = 0;
+		rLoc = 3091;
+		rType = 0;
+		vrLen = 1601;
+		vrLoc = 2284;
 	};
 	785EEA510A58B430005ABDAB /* TempoData.h */ = {
 		uiCtxt = {
