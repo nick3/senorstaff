@@ -1,0 +1,18 @@
+{
+    IBClasses = (
+        {
+            ACTIONS = {endpointChanged = id; }; 
+            CLASS = CAMIDIEndpointMenu; 
+            LANGUAGE = ObjC; 
+            SUPERCLASS = NSMenu; 
+        }, 
+        {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {
+            ACTIONS = {checkForUpdates = id; }; 
+            CLASS = SUUpdater; 
+            LANGUAGE = ObjC; 
+            SUPERCLASS = NSObject; 
+        }
+    ); 
+    IBVersion = 1; 
+}
