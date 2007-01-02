@@ -7,35 +7,43 @@
 //
 
 #import "RestDraw.h"
-#import "NoteController.h"
-#import "StaffController.h"
-#import "MeasureController.h"
-#import "NoteBase.h"
+#import "Note.h"
+@class Clef;
 
 @implementation RestDraw
 
-+(void)draw:(NoteBase *)rest inMeasure:(Measure *)measure atIndex:(float)index target:(id)target selection:(id)selection{
-	BOOL highlighted = ((target == rest) || [[rest getControllerClass] isSelected:rest inSelection:selection]);
-	float x = [NoteController xOf:rest];
-	float lineHeight = [StaffController lineHeightOf:[measure getStaff]];
-	NSRect measureBounds = [MeasureController innerBoundsOf:measure];
-	float middle = measureBounds.origin.y + measureBounds.size.height / 2.0;
+static RestDraw *instance = nil;
+
++(void)draw:(Note *)note atX:(NSNumber *)x highlighted:(BOOL)highlighted
+   withClef:(Clef *)clef onMeasure:(NSRect)measure{
+	if(instance == nil){
+		instance = [[RestDraw alloc] init];
+	}
+	[instance setNote:note];
+	[instance setX:[x floatValue]];
+	[instance setHighlighted:highlighted];
+	[instance setClef:clef];
+	[instance setMeasure:measure];
+	[instance draw];
+}
+
+-(void)doDraw{
 	NSRect rect;
 	NSImage *img = nil;
-	switch([rest getDuration]){
+	switch([note getDuration]){
 		case 1:
 			if(highlighted) [[NSColor redColor] set];
 			rect.origin.x = x;
-			rect.origin.y = middle - lineHeight * 2;
-			rect.size.height = lineHeight;
+			rect.origin.y = middle - line * 2;
+			rect.size.height = line;
 			rect.size.width = 15;
 			[NSBezierPath fillRect:rect];
 			break;
 		case 2:
 			if(highlighted) [[NSColor redColor] set];
 			rect.origin.x = x;
-			rect.origin.y = middle - lineHeight;
-			rect.size.height = lineHeight;
+			rect.origin.y = middle - line;
+			rect.size.height = line;
 			rect.size.width = 15;
 			[NSBezierPath fillRect:rect];
 			break;
@@ -76,27 +84,13 @@
 						operation:NSCompositeSourceOver];
 			break;
 	}
-	if([rest getDotted]){
+	if([note getDotted]){
 		NSRect dotRect;
 		dotRect.origin.x = x + (img != nil ? [img size].width : 17);
 		dotRect.origin.y = (img != nil ? middle + 10 : middle);
 		dotRect.size.width = dotRect.size.height = 4;
 		[[NSBezierPath bezierPathWithOvalInRect:dotRect] fill]; 
 	}
-	if([rest isTriplet]){
-		if(![rest isPartOfFullTriplet]){
-			
-		} else{
-			[NoteDraw drawTriplet:rest];
-		}
-	}
-}
-
-+ (float) topOf:(NoteBase *)note inMeasure:(Measure *)measure{
-	NSRect measureBounds = [MeasureController innerBoundsOf:measure];
-	float middle = measureBounds.origin.y + measureBounds.size.height / 2.0;
-	float lineHeight = [StaffController lineHeightOf:[measure getStaff]];
-	return middle - lineHeight * 4;
 }
 
 @end
