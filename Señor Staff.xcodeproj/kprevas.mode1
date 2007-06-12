@@ -316,6 +316,7 @@
 								<string>2A37F4B8FDCFA73011CA2CEA</string>
 								<string>789308F90B548EEA0023F843</string>
 								<string>789308FA0B548EEA0023F843</string>
+								<string>78A06AFC0C1C75FE00CAEC51</string>
 								<string>789ACD5E0B90E79700A96BF4</string>
 								<string>2A37F4C3FDCFA73011CA2CEA</string>
 								<string>787A95F30B1BE389006FD236</string>
@@ -332,14 +333,16 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>37</integer>
-									<integer>21</integer>
-									<integer>20</integer>
+									<integer>182</integer>
+									<integer>166</integer>
+									<integer>160</integer>
+									<integer>159</integer>
+									<integer>156</integer>
 									<integer>0</integer>
 								</array>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateVisibleRectKey</key>
-							<string>{{0, 332}, {239, 764}}</string>
+							<string>{{0, 2962}, {239, 764}}</string>
 						</dict>
 						<key>PBXTopSmartGroupGIDs</key>
 						<array/>
@@ -376,7 +379,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>1CE0B20306471E060097A5F4</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>TimeSignature.m</string>
+								<string>whatsnew.html</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -384,11 +387,11 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>1CE0B20406471E060097A5F4</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>TimeSignature.m</string>
+										<string>whatsnew.html</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>78A06D880C1E6C4500CAEC51</string>
+										<string>78A06DB00C1E70CF00CAEC51</string>
 										<key>history</key>
 										<array>
 											<string>786A94AD0A8999830006F54C</string>
@@ -550,10 +553,6 @@
 											<string>78AEFF130C0BC6700066C0A6</string>
 											<string>78AEFF140C0BC6700066C0A6</string>
 											<string>78AEFF150C0BC6700066C0A6</string>
-											<string>78E96D6C0C0D1C12000D759A</string>
-											<string>78E96D6E0C0D1C12000D759A</string>
-											<string>78E96D7A0C0F55EE000D759A</string>
-											<string>78ED488B0C15459B0006C471</string>
 											<string>78ED48910C15459B0006C471</string>
 											<string>78ED48950C15459B0006C471</string>
 											<string>78ED48D10C15465A0006C471</string>
@@ -581,8 +580,12 @@
 											<string>78A06D3B0C1E6B1000CAEC51</string>
 											<string>78A06D3C0C1E6B1000CAEC51</string>
 											<string>78A06D6F0C1E6BFA00CAEC51</string>
-											<string>78A06D860C1E6C4500CAEC51</string>
-											<string>78A06D370C1E6B1000CAEC51</string>
+											<string>78A06D9E0C1E6F7300CAEC51</string>
+											<string>78A06D9F0C1E6F7300CAEC51</string>
+											<string>78A06DA00C1E6F7300CAEC51</string>
+											<string>78A06DA10C1E6F7300CAEC51</string>
+											<string>78A06DA20C1E6F7300CAEC51</string>
+											<string>78A06DA30C1E6F7300CAEC51</string>
 										</array>
 										<key>prevStack</key>
 										<array>
@@ -821,6 +824,12 @@
 											<string>78A06D650C1E6BB700CAEC51</string>
 											<string>78A06D710C1E6BFA00CAEC51</string>
 											<string>78A06D870C1E6C4500CAEC51</string>
+											<string>78A06DA40C1E6F7300CAEC51</string>
+											<string>78A06DA50C1E6F7300CAEC51</string>
+											<string>78A06DA60C1E6F7300CAEC51</string>
+											<string>78A06DA70C1E6F7300CAEC51</string>
+											<string>78A06DA80C1E6F7300CAEC51</string>
+											<string>78A06DA90C1E6F7300CAEC51</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -999,7 +1008,7 @@
 	<key>StatusbarIsVisible</key>
 	<true/>
 	<key>TimeStamp</key>
-	<real>203320389.270096</real>
+	<real>203321551.90240601</real>
 	<key>ToolbarDisplayMode</key>
 	<integer>1</integer>
 	<key>ToolbarIsVisible</key>
@@ -1022,8 +1031,8 @@
 		<string>78A06C4A0C1C840E00CAEC51</string>
 		<string>7841FD130A09CEAA00292132</string>
 		<string>788317EF0A617516003363D7</string>
-		<string>/Users/kprevas/Señor Staff/trunk/Señor Staff.xcodeproj</string>
 		<string>1C0AD2B3069F1EA900FABCE6</string>
+		<string>/Users/kprevas/Señor Staff/trunk/Señor Staff.xcodeproj</string>
 	</array>
 	<key>WindowString</key>
 	<string>64 55 1341 823 0 0 1440 878 </string>
