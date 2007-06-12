@@ -8,7 +8,6 @@
 
 #import "Note.h"
 #import "KeySignature.h"
-#import "DrumKit.h"
 @class NoteDraw;
 
 @implementation Note
@@ -28,6 +27,12 @@
 	return self;
 }
 
+- (int)getDuration{
+	return duration;
+}
+- (BOOL)getDotted{
+	return dotted;
+}
 - (int)getPitch{
 	return pitch;
 }
@@ -44,15 +49,15 @@
 	return lastOctave;
 }
 
+- (void)setDuration:(int)_duration{
+	duration = _duration;
+}
+- (void)setDotted:(BOOL)_dotted{
+	dotted = _dotted;
+}
 - (void)setOctave:(int)_octave finished:(BOOL)finished{
 	if(finished){
 		[[[self undoManager] prepareWithInvocationTarget:self] setOctave:lastOctave finished:YES];	
-		if(lastOctave != _octave){
-			[[self getTieFrom] tieTo:nil];
-			[self tieFrom:nil];
-			[[self getTieTo] tieFrom:nil];
-			[self tieTo:nil];
-		}
 		lastOctave = _octave;
 	}
 	octave = _octave;
@@ -61,24 +66,12 @@
 - (void)setPitch:(int)_pitch finished:(BOOL)finished{
 	if(finished){
 		[[[self undoManager] prepareWithInvocationTarget:self] setPitch:lastPitch finished:YES];
-		if(lastPitch != _pitch){
-			[[self getTieFrom] tieTo:nil];
-			[self tieFrom:nil];
-			[[self getTieTo] tieFrom:nil];
-			[self tieTo:nil];
-		}
 		lastPitch = _pitch;
 	}
 	pitch = _pitch;
 	[self sendChangeNotification];
 }
-- (void)setPitch:(int)_pitch octave:(int)_octave finished:(BOOL)finished{
-	[self setPitch:_pitch finished:finished];
-	[self setOctave:_octave finished:finished];
-}
-
 - (void)setAccidental:(int)_accidental{
-	[[[self undoManager] prepareWithInvocationTarget:self] setAccidental:accidental];
 	accidental = _accidental;
 	[self sendChangeNotification];
 }
@@ -94,24 +87,6 @@
 		[obj getPitch] == pitch && [obj getOctave] == octave &&
 		[obj getDuration] == duration && [obj getDotted] == dotted &&
 		[obj getAccidental] == accidental;
-}
-
-- (int)getEffectiveAccidentalWithKeySignature:(KeySignature *)keySig priorAccidentals:(NSMutableDictionary *)accidentals{
-	int effAccidental = accidental;
-	if(accidentals != nil){
-		if(effAccidental == NO_ACC){
-			NSNumber *effAccGet = [accidentals objectForKey:[[[NSNumber alloc] initWithInt:(octave * 7 + pitch)] autorelease]];
-			if(effAccGet != nil){
-				effAccidental = [effAccGet intValue];
-			}
-		} else{
-			[accidentals setObject:[[[NSNumber alloc] initWithInt:accidental] autorelease] forKey:[[[NSNumber alloc] initWithInt:(octave * 7 + pitch)] autorelease]];
-		}
-	}
-	if(effAccidental == NO_ACC){
-		return [keySig getAccidentalAtPosition:pitch];
-	}
-	return effAccidental;
 }
 
 - (int)getEffectivePitchWithKeySignature:(KeySignature *)keySig priorAccidentals:(NSMutableDictionary *)accidentals{
@@ -150,11 +125,11 @@
 }
 
 - (BOOL)isDrawBars{
-	return [self getDuration] > 6;
+	return [self getDuration] > 4;
 }
 
 - (float)addToMIDITrack:(MusicTrack *)musicTrack atPosition:(float)pos withKeySignature:(KeySignature *)keySig 
-			accidentals:(NSMutableDictionary *)accidentals transpose:(int)transposition onChannel:(int)channel{
+			accidentals:(NSMutableDictionary *)accidentals onChannel:(int)channel{
 	if(tieFrom != nil) return 4.0 * [self getEffectiveDuration] / 3;
 	MIDINoteMessage note;
 	note.channel = channel;
@@ -165,7 +140,7 @@
 		note.duration += 4.0 * [tie getEffectiveDuration] / 3;
 		tie = [tie getTieTo];
 	}
-	note.note = [self getEffectivePitchWithKeySignature:keySig priorAccidentals:accidentals] + transposition;
+	note.note = [self getEffectivePitchWithKeySignature:keySig priorAccidentals:nil];
 	if (MusicTrackNewMIDINoteEvent(*musicTrack, pos, &note) != noErr) {
 		NSLog(@"Cannot add note to track.");
     }
@@ -196,10 +171,10 @@
 	return tieFrom;
 }
 
-- (void)transposeBy:(int)numLines{
+- (void)transposeBy:(int)transposeAmount{
 	int newPitch = pitch;
 	int newOctave = octave;
-	newPitch += numLines;
+	newPitch += transposeAmount;
 	while(newPitch >= 7){
 		newPitch -= 7;
 		newOctave++;
@@ -210,21 +185,6 @@
 	}
 	[self setPitch:newPitch finished:YES];
 	[self setOctave:newOctave finished:YES];
-}
-
-- (void)transposeBy:(int)numHalfSteps oldSignature:(KeySignature *)oldSig newSignature:(KeySignature *)newSig{
-	int effectivePitch = [self getEffectivePitchWithKeySignature:oldSig priorAccidentals:nil];
-	effectivePitch += numHalfSteps;
-	int newOctave = effectivePitch / 12;
-	effectivePitch -= newOctave * 12;
-	int newPitch = [newSig positionForPitch:effectivePitch preferAccidental:accidental];
-	if(effectivePitch == 11 && newPitch == 0) {
-		newOctave++;
-	}
-	int newAccidental = [newSig accidentalForPitch:effectivePitch atPosition:newPitch];
-	[self setOctave:newOctave finished:YES];
-	[self setPitch:newPitch finished:YES];
-	[self setAccidental:newAccidental];
 }
 
 - (void)prepareForDelete{
@@ -239,127 +199,8 @@
 	//TODO: implement
 }
 
-+ (NSPoint)closestNoteTo:(NSPoint)base withRank:(int)rank{
-	int pitch = (rank + 5) % 7;
-	int octave = base.y;
-	if(base.x > pitch && base.x - pitch > (pitch + 7) - base.x){
-		octave++;
-	}
-	if(pitch > base.x && pitch - base.x > (base.x + 7) - pitch){
-		octave--;
-	}
-	return NSMakePoint(pitch, octave);
-}
-
-- (NSPoint)closestNoteAtRank:(int)rank{
-	return [Note closestNoteTo:NSMakePoint(pitch, octave) withRank:rank];
-}
-
-+ (NSPoint)noteAtRank:(int)rank onClef:(Clef *)clef{
-	int pitch = [clef getPitchForPosition:4];
-	int octave = [clef getOctaveForPosition:4];
-	return [Note closestNoteTo:NSMakePoint(pitch, octave) withRank:rank];
-}
-
-- (int)getAbsoluteAccidentalWithPriorAccidentals:(NSMutableDictionary *)accidentals{
-	if(accidental == NO_ACC){
-		KeySignature *keySig = [[staff getMeasureContainingNote:self] getEffectiveKeySignature];
-		return [self getEffectiveAccidentalWithKeySignature:keySig priorAccidentals:accidentals];
-	} else {
-		return accidental;
-	}
-}
-
-- (char)getPitchLetter{
-	return ('a' + ((pitch + 2) % 7));
-}
-
-- (void)addRegularPitchToLilypondString:(NSMutableString *)string accidentals:(NSMutableDictionary *)accidentals{
-	NSString *accStr;
-	int acc = [self getAbsoluteAccidentalWithPriorAccidentals:accidentals];
-	if(acc == FLAT){
-		accStr = @"es";
-	} else if(acc == SHARP){
-		accStr = @"is";		
-	} else {
-		accStr = @"";
-	}
-	NSString *pitchStr = [NSString stringWithFormat:@"%c%@", [self getPitchLetter], accStr];
-	NSMutableString *octaveStr = [NSMutableString string];
-	int i;
-	for(i = octave; i > 4; i--){
-		[octaveStr appendString:@"'"];
-	}
-	for(i = octave; i < 4; i++){
-		[octaveStr appendString:@","];
-	}
-	[string appendFormat:@"%@%@", pitchStr, octaveStr];
-}
-
-- (void)addDrumPitchToLilypondString:(NSMutableString *)string{
-	Clef *clef = [[staff getMeasureContainingNote:self] getEffectiveClef];
-	[string appendString:[clef lilypondStringForPitch:[self getPitch] octave:[self getOctave]]];
-}
-
-- (void)addPitchToLilypondString:(NSMutableString *)string accidentals:(NSMutableDictionary *)accidentals{
-	if([staff isDrums]){
-		[self addDrumPitchToLilypondString:string];
-	} else{
-		[self addRegularPitchToLilypondString:string accidentals:accidentals];
-	}
-}
-
-- (void)addNoteToLilypondString:(NSMutableString *)string accidentals:(NSMutableDictionary *)accidentals{
-	[self addPitchToLilypondString:string accidentals:accidentals];
-	[self addDurationToLilypondString:string];
-	[string appendString:@" "];
-}
-
-- (void)addToMusicXMLString:(NSMutableString *)string accidentals:(NSMutableDictionary *)accidentals{
-	[self addToMusicXMLString:string accidentals:accidentals chord:NO];
-}
-
-- (void)addDrumPitchToMusicXMLString:(NSMutableString *)string{
-	Clef *clef = [[staff getMeasureContainingNote:self] getEffectiveClef];
-	[string appendString:[clef musicXMLStringForPitch:[self getPitch] octave:[self getOctave]]];
-}
-
-- (void)addToMusicXMLString:(NSMutableString *)string accidentals:(NSMutableDictionary *)accidentals chord:(BOOL)chord{
-	[string appendString:@"<note>\n"];
-	if(chord){
-		[string appendString:@"<chord/>\n"];
-	}
-	if([staff isDrums]){
-		[self addDrumPitchToMusicXMLString:string];
-	} else {
-		[string appendString:@"<pitch>\n"];
-		[string appendFormat:@"<step>%c</step>\n", [self getPitchLetter]];
-		int alter = [self getAbsoluteAccidentalWithPriorAccidentals:accidentals];
-		if(alter != NO_ACC){
-			[string appendFormat:@"<alter>%d</alter>\n", alter];
-		}
-		[string appendFormat:@"<octave>%d</octave>\n", [self getOctave]];
-		[string appendString:@"</pitch>\n"];
-	}
-	[self addDurationToMusicXMLString:string];
-	if([self getTieFrom] != nil){
-		[string appendString:@"<tie type=\"stop\"/>\n"];
-	}
-	if([self getTieTo] != nil){
-		[string appendString:@"<tie type=\"start\"/>\n"];
-	}
-	[string appendString:@"<notations>\n"];
-	if([self getTieFrom] != nil){
-		[string appendString:@"<tied type=\"stop\"/>\n"];
-	}
-	if([self getTieTo] != nil){
-		[string appendString:@"<tied type=\"start\"/>\n"];
-	}
-	[string appendString:@"</notations>\n"];
-	[string appendString:@"</note>\n"];
-}
-
 - (void)encodeWithCoder:(NSCoder *)coder{
+	[coder encodeObject:staff forKey:@"staff"];
 	[coder encodeInt:duration forKey:@"duration"];
 	[coder encodeBool:dotted forKey:@"dotted"];
 	[coder encodeInt:octave forKey:@"octave"];
@@ -371,6 +212,7 @@
 
 - (id)initWithCoder:(NSCoder *)coder{
 	if(self = [super init]){
+		staff = [coder decodeObjectForKey:@"staff"];
 		duration = [coder decodeIntForKey:@"duration"];
 		dotted = [coder decodeBoolForKey:@"dotted"];
 		octave = [coder decodeIntForKey:@"octave"];

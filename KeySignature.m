@@ -14,7 +14,6 @@ static int majorSharps[18] = {3, -1, -1, 5, -1, 0, 7, -1, 2, -1, -1, 4, -1, 6, -
 static int majorFlats[18] = {-1, -1, 2, -1, 7, 0, -1, 5, -1, -1, 3, -1, 1, -1, 6, -1, -1, 4};
 static int minorSharps[18] = {0, 7, -1, 2, -1, -1, 4, -1, -1, 6, -1, 1, -1, 3, -1, -1, 5, -1};
 static int minorFlats[18] = {0, -1, 5, -1, -1, 3, -1, -1, 1, -1, 6, -1, 4, -1, -1, 2, -1, 7};
-static int root[18] = {0, 1, 1, 2, 2, 3, 4, 4, 5, 6, 6, 7, 8, 9, 9, 10, 11, 11};
 static int base[7] = {0, 2, 4, 5, 7, 9, 11};
 static int sharpLocs[7] = {3, 0, 4, 1, 5, 2, 6};
 static int sharpVisLocs[7] = {8, 5, 9, 6, 3, 7, 4};
@@ -62,26 +61,6 @@ static int flatVisLocs[7] = {4, 7, 3, 6, 2, 5, 1};
 		}
 	}
 	return true;
-}
-
-- (int)distanceFrom:(KeySignature *)otherSig{
-	int thisRoot = root[[self getIndexFromA]];
-	int otherRoot = root[[otherSig getIndexFromA]];
-	if(thisRoot < otherRoot){
-		int distance = otherRoot - thisRoot;
-		if(distance < 12 - distance){
-			return -distance;
-		} else {
-			return 12 - distance;
-		}
-	} else {
-		int distance = thisRoot - otherRoot;
-		if(distance < 12 - distance){
-			return distance;
-		} else {
-			return distance - 12;
-		}
-	}
 }
 
 - (int)getIndexFromA{
@@ -181,59 +160,6 @@ static int flatVisLocs[7] = {4, 7, 3, 6, 2, 5, 1};
 	return NO_ACC;
 }
 
-- (int)positionForPitch:(int)pitch preferAccidental:(int)accidental{
-	int i;
-	if(accidental == SHARP){
-		if(pitches[6] + 1 == pitch && [self getAccidentalAtPosition:6] != SHARP){
-			return 6;
-		}
-		for(i=0; i < 7; i++){
-			if(pitches[i] + 1 == pitch && [self getAccidentalAtPosition:i] != SHARP){
-				return i;
-			}
-		}
-	} else if(accidental == FLAT){
-		if(pitches[0] - 1 == pitch - 12 && [self getAccidentalAtPosition:0] != FLAT){
-			return 0;
-		}
-		for(i=0; i < 7; i++){
-			if(pitches[i] - 1 == pitch && [self getAccidentalAtPosition:i] != FLAT){
-				return i;
-			}
-		}
-	}
-	for(i=0; i < 7; i++){
-		if(pitches[i] >= pitch){
-			if(pitches[i] > pitch && [self getAccidentalAtPosition:i] == FLAT){
-				return (i-1) % 7;
-			}
-			return i;
-		}
-	}
-	return 0;
-}
-
-- (int)accidentalForPitch:(int)pitch atPosition:(int)position{
-	int pitchAtPos = [self getPitchAtPosition:position];
-	if(pitchAtPos > pitch || (pitch == 11 && pitchAtPos == 0)){
-		if([self getAccidentalAtPosition:position] == SHARP){
-			return NATURAL;
-		} else if([self getAccidentalAtPosition:position] == FLAT){
-			return NO_ACC;
-		}
-		return FLAT;
-	} else if(pitchAtPos < pitch || (pitchAtPos == 11 && pitch == 0)){
-		if([self getAccidentalAtPosition:position] == FLAT){
-			return NATURAL;
-		} else if([self getAccidentalAtPosition:position] == SHARP){
-			return NO_ACC;
-		}
-		return SHARP;
-	} else {
-		return NO_ACC;
-	}
-}
-
 - (int)getNumSharps{
 	return sharps;
 }
@@ -271,26 +197,6 @@ static int flatVisLocs[7] = {4, 7, 3, 6, 2, 5, 1};
 		minor = _minor;
 	}
 	return self;
-}
-
-- (void)addToLilypondString:(NSMutableString *)string{
-	NSString *lyPitches[] = {@"a", @"ais", @"bes", @"b", @"ces", @"c", @"cis", @"des", @"d", @"dis", @"ees", @"e", @"f", @"fis", @"ges", @"g", @"gis", @"aes"};
-	[string appendFormat:@"\\key %@ \\%@ ", lyPitches[[self getIndexFromA]], (minor ? @"minor" : @"major")];
-}
-
-- (void)addToMusicXMLString:(NSMutableString *)string{
-	[string appendString:@"<key>\n"];
-	if(flats != 0){
-		[string appendFormat:@"<fifths>-%d</fifths>\n", flats];
-	} else {
-		[string appendFormat:@"<fifths>%d</fifths>\n", sharps];
-	}
-	if(minor){
-		[string appendString:@"<mode>minor</mode>\n"];
-	} else {
-		[string appendString:@"<mode>major</mode>\n"];
-	}
-	[string appendString:@"</key>\n"];
 }
 
 @end

@@ -61,14 +61,6 @@
 	}
 }
 
-- (BOOL)isDrawBars{
-	if([notes count] > 0){
-		return [[notes objectAtIndex:0] isDrawBars];
-	} else{
-		return NO;
-	}
-}
-
 - (void)setDuration:(int)_duration{
 	[(NoteBase *)[notes do] setDuration:_duration];
 }
@@ -78,18 +70,14 @@
 
 - (float)addToMIDITrack:(MusicTrack *)musicTrack atPosition:(float)pos
 	   withKeySignature:(KeySignature *)sig accidentals:(NSMutableDictionary *)accidentals
-			  transpose:(int)transposition onChannel:(int)channel{
+			  onChannel:(int)channel{
 	[[notes do] addToMIDITrack:musicTrack atPosition:pos withKeySignature:sig 
-				   accidentals:accidentals transpose:transposition onChannel:channel];
+				   accidentals:accidentals onChannel:channel];
 	return 4.0 * [self getEffectiveDuration] / 3;
 }
 
-- (void)transposeBy:(int)numLines{
-	[[notes do] transposeBy:numLines];
-}
-
-- (void)transposeBy:(int)numHalfSteps oldSignature:(KeySignature *)oldSig newSignature:(KeySignature *)newSig{
-	[[notes do] transposeBy:numHalfSteps oldSignature:oldSig newSignature:newSig];
+- (void)transposeBy:(int)transposeAmount{
+	[[notes do] transposeBy:transposeAmount];
 }
 
 - (void)prepareForDelete{
@@ -177,11 +165,7 @@
 		[note setDuration:[self getDuration]];		
 		[note setDotted:[self getDotted]];
 	}
-	if([note respondsToSelector:@selector(getNotes)]){
-		[[notes doSelf] addObject:[[note getNotes] each]];
-	} else {
-		[notes addObject:note];
-	}
+	[notes addObject:note];
 	[self sendChangeNotification];
 }
 
@@ -191,90 +175,15 @@
 	[self sendChangeNotification];
 }
 
-- (int)getEffectivePitchWithKeySignature:(KeySignature *)keySig priorAccidentals:(NSMutableDictionary *)accidentals{
-	[[notes do] getEffectivePitchWithKeySignature:keySig priorAccidentals:accidentals];
-	return 0;
-}
-
-- (NoteBase *)getNoteMatching:(NoteBase *)note{
-	NSEnumerator *notesEnum = [notes objectEnumerator];
-	id chordNote;
-	while(chordNote = [notesEnum nextObject]){
-		if([chordNote respondsToSelector:@selector(pitchMatches:)] && [chordNote pitchMatches:note]){
-			return chordNote;
-		}
-	}
-	return nil;
-}
-
-- (int)getLastPitch{
-	return [[notes objectAtIndex:0] getLastPitch];
-}
-
-- (int)getLastOctave{
-	return [[notes objectAtIndex:0] getLastOctave];
-}
-
-- (void)setPitch:(int)pitch octave:(int)octave finished:(BOOL)finished{
-	int delta = (octave * 7 + pitch) - ([[notes objectAtIndex:0] getLastOctave] * 7 + [[notes objectAtIndex:0] getLastPitch]);
-	NSEnumerator *notesEnum = [notes objectEnumerator];
-	id note;
-	while(note = [notesEnum nextObject]){
-		int lastPitch = [note getLastPitch];
-		int lastOctave = [note getLastOctave];
-		int newAbsPitch = (lastOctave * 7 + lastPitch) + delta;
-		int newPitch = newAbsPitch % 7;
-		int newOctave = newAbsPitch / 7;
-		[note setPitch:newPitch octave:newOctave finished:finished];
-	}
-}
-
-- (void)addNoteToLilypondString:(NSMutableString *)string accidentals:(NSMutableDictionary *)accidentals{
-	if(![staff isDrums]){
-		[string appendString:@"<"];
-		NSEnumerator *notesEnum = [notes objectEnumerator];
-		id note;
-		while(note = [notesEnum nextObject]){
-			[note addPitchToLilypondString:string accidentals:accidentals];
-			if([note getTieTo] != nil){
-				[string appendString:@"~"];
-			}
-			[string appendString:@" "];
-		}
-		[string deleteCharactersInRange:NSMakeRange([string length] - 1, 1)];
-		[string appendString:@">"];
-		[self addDurationToLilypondString:string];
-		[string appendString:@" "];
-	} else {
-		[string appendString:@"<<"];
-		NSEnumerator *notesEnum = [notes objectEnumerator];
-		id note;
-		while(note = [notesEnum nextObject]){
-			[note addPitchToLilypondString:string accidentals:accidentals];
-			[note addDurationToLilypondString:string];
-			[string appendString:@" "];
-		}
-		[string appendString:@">> "];
-	}
-}
-
-- (void)addToMusicXMLString:(NSMutableString *)string accidentals:(NSMutableDictionary *)accidentals{
-	NSEnumerator *notesEnum = [notes objectEnumerator];
-	BOOL first = YES;
-	id note;
-	while(note = [notesEnum nextObject]){
-		[note addToMusicXMLString:string accidentals:accidentals chord:(!first)];
-		first = NO;
-	}
-}
-
 - (void)encodeWithCoder:(NSCoder *)coder{
 	[coder encodeObject:notes forKey:@"notes"];
+	[coder encodeObject:staff forKey:@"staff"];
 }
 
 - (id)initWithCoder:(NSCoder *)coder{
 	if(self = [super init]){
 		[self setNotes:[coder decodeObjectForKey:@"notes"]];
+		[self setStaff:[coder decodeObjectForKey:@"staff"]];
 	}
 	return self;
 }

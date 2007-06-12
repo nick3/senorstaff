@@ -18,7 +18,7 @@
 	if(clef != nil){
 		NSImage *img;
 		NSPoint clefLoc;
-		float baseY = [StaffController baseOf:[measure getStaff]] - [StaffController innerHeightOf:[measure getStaff]];
+		float baseY = [StaffController baseOf:[measure getStaff]];
 		clefLoc.x = [[measure getControllerClass] xOf:measure] + [[measure getControllerClass] clefAreaX:measure];
 		if(clef == [Clef trebleClef]){
 			if(isTarget){
@@ -26,16 +26,16 @@
 			} else{
 				img = [NSImage imageNamed:@"treble.png"];
 			}
-			clefLoc.y = baseY - 17;
+			clefLoc.y = baseY + 20;
 		} else if(clef == [Clef bassClef]){
 			if(isTarget){
 				img = [NSImage imageNamed:@"bass over.png"];
 			} else{
 				img = [NSImage imageNamed:@"bass.png"];
 			}
-			clefLoc.y = baseY;
+			clefLoc.y = baseY - 7;
 		}
-		[img drawFlippedAtPoint:clefLoc];
+		[img compositeToPoint:clefLoc operation:NSCompositeSourceOver];
 	} else if(isTarget){
 		NSRect bounds = [MeasureController innerBoundsOf:measure];
 		NSImage *clefIns;
@@ -44,7 +44,8 @@
 		} else{
 			clefIns = [NSImage imageNamed:@"clefins_treble.png"];
 		}
-		[clefIns drawFlippedAtPoint:NSMakePoint(bounds.origin.x + [[measure getControllerClass] clefAreaX:measure], bounds.origin.y - [clefIns size].height)];
+		[clefIns compositeToPoint:NSMakePoint(bounds.origin.x + [[measure getControllerClass] clefAreaX:measure], bounds.origin.y)
+						operation:NSCompositeSourceOver];		
 	}
 }
 

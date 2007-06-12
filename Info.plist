@@ -23,68 +23,6 @@
 			<string>Editor</string>
 			<key>NSDocumentClass</key>
 			<string>MusicDocument</string>
-			<key>NSExportableAs</key>
-			<array>
-				<string>MIDI file</string>
-				<string>LilyPond file</string>
-				<string>MusicXML file</string>
-			</array>
-		</dict>
-		<dict>
-			<key>CFBundleTypeExtensions</key>
-			<array>
-				<string>mid</string>
-			</array>
-			<key>CFBundleTypeMIMETypes</key>
-			<array>
-				<string>audio/midi</string>
-			</array>
-			<key>CFBundleTypeName</key>
-			<string>MIDI file</string>
-			<key>CFBundleTypeRole</key>
-			<string>Viewer</string>
-			<key>LSTypeIsPackage</key>
-			<false/>
-			<key>NSDocumentClass</key>
-			<string>MusicDocument</string>
-			<key>NSPersistentStoreTypeKey</key>
-			<string>Binary</string>
-		</dict>
-		<dict>
-			<key>CFBundleTypeExtensions</key>
-			<array>
-				<string>ly</string>
-			</array>
-			<key>CFBundleTypeName</key>
-			<string>LilyPond file</string>
-			<key>CFBundleTypeRole</key>
-			<string>None</string>
-			<key>LSTypeIsPackage</key>
-			<false/>
-			<key>NSDocumentClass</key>
-			<string>MusicDocument</string>
-			<key>NSPersistentStoreTypeKey</key>
-			<string>Binary</string>
-		</dict>
-		<dict>
-			<key>CFBundleTypeExtensions</key>
-			<array>
-				<string>xml</string>
-			</array>
-			<key>CFBundleTypeMIMETypes</key>
-			<array>
-				<string>text.xml</string>
-			</array>
-			<key>CFBundleTypeName</key>
-			<string>MusicXML file</string>
-			<key>CFBundleTypeRole</key>
-			<string>None</string>
-			<key>LSTypeIsPackage</key>
-			<false/>
-			<key>NSDocumentClass</key>
-			<string>MusicDocument</string>
-			<key>NSPersistentStoreTypeKey</key>
-			<string>XML</string>
 		</dict>
 	</array>
 	<key>CFBundleExecutable</key>
@@ -106,7 +44,7 @@
 	<key>CFBundleSignature</key>
 	<string>SSTF</string>
 	<key>CFBundleVersion</key>
-	<string>0.8.2</string>
+	<string>0.7.1</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>

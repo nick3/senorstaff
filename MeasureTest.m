@@ -14,14 +14,10 @@
 #import "Rest.h"
 #import "TimeSignature.h"
 #import "MusicDocument.h"
-#include "TestUtil.h"
-
-extern int enableMIDI;
 
 @implementation MeasureTest
 
 - (void)setUp{
-	enableMIDI = 0;
 	staff = [[Staff alloc] initWithSong:nil];
 	measure = [staff getLastMeasure];
 }
@@ -50,7 +46,7 @@ extern int enableMIDI;
 	Rest *firstRest = [[Rest alloc] initWithDuration:4 dotted:NO onStaff:staff];
 	Rest *secondRest = [[Rest alloc] initWithDuration:2 dotted:YES onStaff:staff];
 	[measure setNotes:[NSMutableArray arrayWithObjects:firstRest, secondRest, nil]];
-	STAssertEquals([measure getTotalDuration], effDuration(1, NO), @"Wrong total duration returned.");
+	STAssertEquals([measure getTotalDuration], (float)3.0, @"Wrong total duration returned.");
 	[firstRest release];
 	[secondRest release];
 }
@@ -116,9 +112,9 @@ extern int enableMIDI;
 	Rest *firstRest = [[Rest alloc] initWithDuration:4 dotted:NO onStaff:staff];
 	Rest *secondRest = [[Rest alloc] initWithDuration:2 dotted:YES onStaff:staff];
 	[measure setNotes:[NSMutableArray arrayWithObjects:firstRest, secondRest, nil]];
-	STAssertEquals([measure getNumberOfNotesStartingAfter:0.0 before:effDuration(4, NO)], (int)0, @"Wrong number of notes in time span.");
-	STAssertEquals([measure getNumberOfNotesStartingAfter:0.0 before:(effDuration(4, NO) + 0.1)], (int)1, @"Wrong number of notes in time span.");
-	STAssertEquals([measure getNumberOfNotesStartingAfter:-0.1 before:(effDuration(4, NO) + 0.1)], (int)2, @"Wrong number of notes in time span.");
+	STAssertEquals([measure getNumberOfNotesStartingAfter:0.0 before:0.75], (int)0, @"Wrong number of notes in time span.");
+	STAssertEquals([measure getNumberOfNotesStartingAfter:0.0 before:0.76], (int)1, @"Wrong number of notes in time span.");
+	STAssertEquals([measure getNumberOfNotesStartingAfter:-0.1 before:0.76], (int)2, @"Wrong number of notes in time span.");
 	[firstRest release];
 	[secondRest release];	
 }
@@ -319,7 +315,7 @@ extern int enableMIDI;
 	[measure timeSignatureChangedFrom:1.0 to:0.5];
 	STAssertEquals([[staff getMeasures] count], (unsigned)2, @"Wrong number of measures resulting from time signature change.");
 	STAssertEquals([[measure getNotes] count], (unsigned)1, @"Wrong number of notes left after time signature change.");
-	STAssertEquals([measure getTotalDuration], effDuration(2, NO), @"Wrong total duration left in first measure.");
+	STAssertEquals([measure getTotalDuration], (float)1.5, @"Wrong total duration left in first measure.");
 	[firstRest release];
 	[secondRest release];
 }
@@ -333,7 +329,7 @@ extern int enableMIDI;
 	[song setTimeSignature:[TimeSignature timeSignatureWithTop:8 bottom:4] atIndex:0];
 	[measure timeSignatureChangedFrom:1.0 to:2.0];
 	STAssertEquals([[measure getNotes] count], (unsigned)2, @"Wrong number of notes left after time signature change.");
-	STAssertEquals([measure getTotalDuration], effDuration(1, NO) * 2.0f, @"Wrong total duration left in first measure.");
+	STAssertEquals([measure getTotalDuration], (float)6.0, @"Wrong total duration left in first measure.");
 	STAssertEquals([[secondMeasure getNotes] count], (unsigned)0, @"Notes not removed from second measure."); 
 	[firstRest release];
 	[secondRest release];
@@ -348,9 +344,9 @@ extern int enableMIDI;
 	[song setTimeSignature:[TimeSignature timeSignatureWithTop:6 bottom:4] atIndex:0];
 	[measure timeSignatureChangedFrom:1.0 to:1.5];
 	STAssertEquals([[measure getNotes] count], (unsigned)2, @"Wrong number of notes left after time signature change.");
-	STAssertEquals([measure getTotalDuration], effDuration(1, YES), @"Wrong total duration left in first measure.");
+	STAssertEquals([measure getTotalDuration], (float)4.5, @"Wrong total duration left in first measure.");
 	STAssertEquals([[secondMeasure getNotes] count], (unsigned)1, @"Wrong number of notes left in second measure.");
-	STAssertEquals([secondMeasure getTotalDuration], effDuration(2, NO), @"Wrong total duration left in second measure.");
+	STAssertEquals([secondMeasure getTotalDuration], (float)1.5, @"Wrong total duration left in second measure.");
 	STAssertEqualObjects([[[measure getNotes] lastObject] getTieTo], [[secondMeasure getNotes] objectAtIndex:0], @"Change time signature didn't tie split notes.");
 	[firstRest release];
 	[secondNote release];
@@ -488,9 +484,9 @@ extern int enableMIDI;
 	[secondMeasure setNotes:[NSMutableArray arrayWithObject:thirdNote]];
 	[measure refreshNotes:firstNote];
 	STAssertEquals([[secondMeasure getNotes] count], (unsigned)1, @"Failed to consolidate tied notes on refresh.");
-	STAssertEquals([[[secondMeasure getNotes] objectAtIndex:0] getEffectiveDuration], effDuration(2, YES), @"Consolidated note has wrong duration.");
+	STAssertEquals([[[secondMeasure getNotes] objectAtIndex:0] getEffectiveDuration], (float)2.25, @"Consolidated note has wrong duration.");
 	STAssertNotNil([[[secondMeasure getNotes] objectAtIndex:0] getTieFrom], @"Partially consolidated note did not maintain tie from previous measure.");
-	STAssertEquals([[[[secondMeasure getNotes] objectAtIndex:0] getTieFrom] getEffectiveDuration], effDuration(4, NO), @"Remaining note after consolidation has wrong duration.");
+	STAssertEquals([[[[secondMeasure getNotes] objectAtIndex:0] getTieFrom] getEffectiveDuration], (float)0.75, @"Remaining note after consolidation has wrong duration.");
 	[firstNote release];
 	[secondNote release];
 	[thirdNote release];
@@ -508,9 +504,9 @@ extern int enableMIDI;
 	[secondMeasure setNotes:[NSMutableArray arrayWithObject:thirdNote]];
 	[measure refreshNotes:firstNote];
 	STAssertEquals([[secondMeasure getNotes] count], (unsigned)2, @"Failed to consolidate tied notes correctly on refresh.");
-	STAssertEquals([[[secondMeasure getNotes] objectAtIndex:0] getEffectiveDuration], effDuration(2, YES), @"Consolidated note has wrong duration.");
+	STAssertEquals([[[secondMeasure getNotes] objectAtIndex:0] getEffectiveDuration], (float)2.25, @"Consolidated note has wrong duration.");
 	STAssertNotNil([[[secondMeasure getNotes] objectAtIndex:0] getTieTo], @"Note lost on incomplete consolidation.");
-	STAssertEquals([[[[secondMeasure getNotes] objectAtIndex:0] getTieTo] getEffectiveDuration], effDuration(8, NO), @"Remaining note after consolidation has wrong duration.");
+	STAssertEquals([[[[secondMeasure getNotes] objectAtIndex:0] getTieTo] getEffectiveDuration], (float)0.375, @"Remaining note after consolidation has wrong duration.");
 	[firstNote release];
 	[secondNote release];
 	[thirdNote release];
@@ -527,7 +523,7 @@ extern int enableMIDI;
 	[secondMeasure setNotes:[NSMutableArray arrayWithObject:thirdNote]];
 	[measure grabNotesFromNextMeasure];
 	STAssertEquals([[measure getNotes] count], (unsigned)1, @"Failed to consolidate tied notes on grab.");
-	STAssertEquals([[[measure getNotes] objectAtIndex:0] getEffectiveDuration], effDuration(1, NO), @"Consolidated note has wrong duration.");
+	STAssertEquals([[[measure getNotes] objectAtIndex:0] getEffectiveDuration], (float)3, @"Consolidated note has wrong duration.");
 	[secondNote release];
 	[thirdNote release];
 }
@@ -543,9 +539,9 @@ extern int enableMIDI;
 	[secondMeasure setNotes:[NSMutableArray arrayWithObject:thirdNote]];
 	[measure grabNotesFromNextMeasure];
 	STAssertEquals([[measure getNotes] count], (unsigned)1, @"Failed to consolidate tied notes on grab.");
-	STAssertEquals([[[measure getNotes] objectAtIndex:0] getEffectiveDuration], effDuration(1, NO), @"Consolidated note has wrong duration.");
+	STAssertEquals([[[measure getNotes] objectAtIndex:0] getEffectiveDuration], (float)3, @"Consolidated note has wrong duration.");
 	STAssertNotNil([[[measure getNotes] objectAtIndex:0] getTieTo], @"Partially consolidated note did not maintain tie to next measure.");
-	STAssertEquals([[[[measure getNotes] objectAtIndex:0] getTieTo] getEffectiveDuration], effDuration(4, NO), @"Remaining note after consolidation has wrong duration.");
+	STAssertEquals([[[[measure getNotes] objectAtIndex:0] getTieTo] getEffectiveDuration], (float)0.75, @"Remaining note after consolidation has wrong duration.");
 	[secondNote release];
 	[thirdNote release];
 }
@@ -561,9 +557,9 @@ extern int enableMIDI;
 	[secondMeasure setNotes:[NSMutableArray arrayWithObject:thirdNote]];
 	[measure grabNotesFromNextMeasure];
 	STAssertEquals([[measure getNotes] count], (unsigned)2, @"Failed to consolidate tied notes correctly on grab.");
-	STAssertEquals([[[measure getNotes] objectAtIndex:0] getEffectiveDuration], effDuration(2, YES), @"Consolidated note has wrong duration.");
+	STAssertEquals([[[measure getNotes] objectAtIndex:0] getEffectiveDuration], (float)2.25, @"Consolidated note has wrong duration.");
 	STAssertNotNil([[[measure getNotes] objectAtIndex:0] getTieTo], @"Note lost on incomplete consolidation.");
-	STAssertEquals([[[[measure getNotes] objectAtIndex:0] getTieTo] getEffectiveDuration], effDuration(8, NO), @"Remaining note after consolidation has wrong duration.");
+	STAssertEquals([[[[measure getNotes] objectAtIndex:0] getTieTo] getEffectiveDuration], (float)0.375, @"Remaining note after consolidation has wrong duration.");
 	[secondNote release];
 	[thirdNote release];	
 }
@@ -575,17 +571,18 @@ extern int enableMIDI;
 	Note *thirdNote = [[Note alloc] initWithPitch:1 octave:0 duration:4 dotted:NO accidental:NO_ACC onStaff:staff];
 	Note *fourthNote = [[Note alloc] initWithPitch:1 octave:0 duration:4 dotted:NO accidental:NO_ACC onStaff:staff];
 	[measure setNotes:[NSMutableArray arrayWithObjects:firstNote, secondNote, thirdNote, fourthNote, nil]];
-	STAssertEquals([measure getClosestNoteBefore:0.0], firstNote, @"Wrong closest note to beginning of measure.");
-	STAssertEquals([measure getClosestNoteBefore:(effDuration(4, NO) - 0.01)], firstNote, @"Wrong closest note to position before second quarter note.");
-	STAssertEquals([measure getClosestNoteBefore:effDuration(4, NO)], secondNote, @"Wrong closest note to position on second quarter note.");
-	STAssertEquals([measure getClosestNoteBefore:(effDuration(4, NO) + 0.01)], secondNote, @"Wrong closest note to position after second quarter note.");
-	STAssertEquals([measure getClosestNoteBefore:(effDuration(2, NO) - 0.01)], secondNote, @"Wrong closest note to position before third quarter note.");
-	STAssertEquals([measure getClosestNoteBefore:effDuration(2, NO)], thirdNote, @"Wrong closest note to position on third quarter note.");
-	STAssertEquals([measure getClosestNoteBefore:(effDuration(2, NO) + 0.01)], thirdNote, @"Wrong closest note to position after third quarter note.");
-	STAssertEquals([measure getClosestNoteBefore:(effDuration(2, YES) - 0.01)], thirdNote, @"Wrong closest note to position before fourth quarter note.");
-	STAssertEquals([measure getClosestNoteBefore:effDuration(2, YES)], fourthNote, @"Wrong closest note to position on fourth quarter note.");
-	STAssertEquals([measure getClosestNoteBefore:(effDuration(2, YES) + 0.01)], fourthNote, @"Wrong closest note to position after fourth quarter note.");
-	STAssertEquals([measure getClosestNoteBefore:(effDuration(1, NO) - 0.01)], fourthNote, @"Wrong closest note to position before end of measure.");
+	STAssertEquals([measure getClosestNoteBefore:0.0], firstNote, @"Wrong closest note to 0.0.");
+	STAssertEquals([measure getClosestNoteBefore:0.5], firstNote, @"Wrong closest note to 0.5.");
+	STAssertEquals([measure getClosestNoteBefore:0.749], firstNote, @"Wrong closest note to 0.749.");
+	STAssertEquals([measure getClosestNoteBefore:0.75], secondNote, @"Wrong closest note to 0.75.");
+	STAssertEquals([measure getClosestNoteBefore:1.0], secondNote, @"Wrong closest note to 1.0.");
+	STAssertEquals([measure getClosestNoteBefore:1.49], secondNote, @"Wrong closest note to 1.49.");
+	STAssertEquals([measure getClosestNoteBefore:1.5], thirdNote, @"Wrong closest note to 1.5.");
+	STAssertEquals([measure getClosestNoteBefore:2.0], thirdNote, @"Wrong closest note to 2.0.");
+	STAssertEquals([measure getClosestNoteBefore:2.249], thirdNote, @"Wrong closest note to 2.249.");
+	STAssertEquals([measure getClosestNoteBefore:2.25], fourthNote, @"Wrong closest note to 2.25.");
+	STAssertEquals([measure getClosestNoteBefore:2.75], fourthNote, @"Wrong closest note to 2.75.");
+	STAssertEquals([measure getClosestNoteBefore:2.9], fourthNote, @"Wrong closest note to 2.9.");
 	[firstNote release];
 	[secondNote release];
 	[thirdNote release];
@@ -599,17 +596,18 @@ extern int enableMIDI;
 	Note *thirdNote = [[Note alloc] initWithPitch:1 octave:0 duration:2 dotted:NO accidental:NO_ACC onStaff:staff];
 	Note *fourthNote = [[Note alloc] initWithPitch:1 octave:0 duration:16 dotted:NO accidental:NO_ACC onStaff:staff];
 	[measure setNotes:[NSMutableArray arrayWithObjects:firstNote, secondNote, thirdNote, fourthNote, nil]];
-	STAssertEquals([measure getClosestNoteBefore:0.0], firstNote, @"Wrong closest note to beginning of measure.");
-	STAssertEquals([measure getClosestNoteBefore:(effDuration(4, YES) - 0.01)], firstNote, @"Wrong closest note to position before second note.");
-	STAssertEquals([measure getClosestNoteBefore:effDuration(4, YES)], secondNote, @"Wrong closest note to position on second note.");
-	STAssertEquals([measure getClosestNoteBefore:(effDuration(4, YES) + 0.01)], secondNote, @"Wrong closest note to position after second note.");
-	STAssertEquals([measure getClosestNoteBefore:(effDuration(4, YES) + effDuration(16, NO) - 0.01)], secondNote, @"Wrong closest note to position before third note.");
-	STAssertEquals([measure getClosestNoteBefore:(effDuration(4, YES) + effDuration(16, NO))], thirdNote, @"Wrong closest note to position on third note.");
-	STAssertEquals([measure getClosestNoteBefore:(effDuration(4, YES) + effDuration(16, NO) + 0.01)], thirdNote, @"Wrong closest note to position after third note.");
-	STAssertEquals([measure getClosestNoteBefore:(effDuration(4, YES) + effDuration(16, NO) + effDuration(2, NO) - 0.01)], thirdNote, @"Wrong closest note to position before fourth note.");
-	STAssertEquals([measure getClosestNoteBefore:(effDuration(4, YES) + effDuration(16, NO) + effDuration(2, NO))], fourthNote, @"Wrong closest note to position on fourth note.");
-	STAssertEquals([measure getClosestNoteBefore:(effDuration(4, YES) + effDuration(16, NO) + effDuration(2, NO) + 0.01)], fourthNote, @"Wrong closest note to position after fourth note.");
-	STAssertEquals([measure getClosestNoteBefore:(effDuration(1, NO) - 0.01)], fourthNote, @"Wrong closest note to position before end of measure.");
+	STAssertEquals([measure getClosestNoteBefore:0.0], firstNote, @"Wrong closest note to 0.0.");
+	STAssertEquals([measure getClosestNoteBefore:0.75], firstNote, @"Wrong closest note to 0.75.");
+	STAssertEquals([measure getClosestNoteBefore:1.124], firstNote, @"Wrong closest note to 1.124.");
+	STAssertEquals([measure getClosestNoteBefore:1.125], secondNote, @"Wrong closest note to 1.125.");
+	STAssertEquals([measure getClosestNoteBefore:1.275], secondNote, @"Wrong closest note to 1.275.");
+	STAssertEquals([measure getClosestNoteBefore:1.3124], secondNote, @"Wrong closest note to 1.3124.");
+	STAssertEquals([measure getClosestNoteBefore:1.3125], thirdNote, @"Wrong closest note to 1.3125.");
+	STAssertEquals([measure getClosestNoteBefore:2.3], thirdNote, @"Wrong closest note to 2.3.");
+	STAssertEquals([measure getClosestNoteBefore:2.8124], thirdNote, @"Wrong closest note to 2.8124.");
+	STAssertEquals([measure getClosestNoteBefore:2.8125], fourthNote, @"Wrong closest note to 2.8125.");
+	STAssertEquals([measure getClosestNoteBefore:2.9], fourthNote, @"Wrong closest note to 2.9.");
+	STAssertEquals([measure getClosestNoteBefore:2.99], fourthNote, @"Wrong closest note to 2.99.");
 	[firstNote release];
 	[secondNote release];
 	[thirdNote release];
@@ -635,17 +633,6 @@ extern int enableMIDI;
 	[self setupSong];
 	Note *firstNote = [[Note alloc] initWithPitch:0 octave:0 duration:4 dotted:NO accidental:NO_ACC onStaff:staff];
 	Note *secondNote = [[Note alloc] initWithPitch:0 octave:0 duration:4 dotted:NO accidental:NO_ACC onStaff:staff];
-	[measure setNotes:[NSMutableArray arrayWithObjects:firstNote, secondNote, nil]];
-	NSArray *groups = [measure getNoteGroups];
-	STAssertEquals([groups count], (unsigned)0, @"Wrong number of groups in measure.");
-	[firstNote release];
-	[secondNote release];
-}
-
-- (void)testTwoQuarterNoteTripletNotesNotGrouped{
-	[self setupSong];
-	Note *firstNote = [[Note alloc] initWithPitch:0 octave:0 duration:6 dotted:NO accidental:NO_ACC onStaff:staff];
-	Note *secondNote = [[Note alloc] initWithPitch:0 octave:0 duration:6 dotted:NO accidental:NO_ACC onStaff:staff];
 	[measure setNotes:[NSMutableArray arrayWithObjects:firstNote, secondNote, nil]];
 	NSArray *groups = [measure getNoteGroups];
 	STAssertEquals([groups count], (unsigned)0, @"Wrong number of groups in measure.");

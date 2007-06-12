@@ -14,27 +14,13 @@
 #import "MeasureController.h"
 #import "TimeSignatureController.h"
 #import "ClefController.h"
-#import "TranspositionValueTransformer.h"
 
 @implementation MEWindowController
-
-+ (void)initialize{
-	[NSValueTransformer setValueTransformer:[[[TranspositionValueTransformer alloc] init] autorelease] forName:@"TranspositionValueTransformer"];
-	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-	NSDictionary *appDefaults = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:@"NO", @"YES", nil]
-															forKeys:[NSArray arrayWithObjects:@"SSTFHideKeyHelp", @"NSNavPanelExpandedStateForSaveMode", nil]];
-    [defaults registerDefaults:appDefaults];
-}
-
-- (ScoreView *)view{
-	return view;
-}
 
 - (void)windowDidLoad{
 	[view setFrameSize:[view calculateBounds].size];
 	[verticalRuler setFrameSize:NSMakeSize([verticalRuler frame].size.width, [view frame].size.height)];
 	[horizontalRuler setFrameSize:NSMakeSize([view frame].size.width, [horizontalRuler frame].size.height)];
-	[self setKeyHelp:@"Available commands:"];
 }	
 
 - (void)mouseMoved:(NSEvent *)event{
@@ -65,11 +51,6 @@
 	[[[self document] getSong] playToEndpoint:[[[[NSApp mainMenu] itemWithTag:1] submenu] selectedEndpoint]];
 }
 
-- (IBAction)playSelection:(id)sender{
-	[[[self document] getSong] stopPlaying];
-	[[[self document] getSong] playToEndpoint:[[[[NSApp mainMenu] itemWithTag:1] submenu] selectedEndpoint] notesToPlay:[view selection]];
-}
-
 - (IBAction)stopSong:(id)sender{
 	[[[self document] getSong] stopPlaying];
 }
@@ -77,41 +58,6 @@
 - (IBAction)addStaff:(id)sender{
 	[[[self document] getSong] addStaff];
 	[self placeRulerComponents];
-}
-
-- (IBAction) setZoom:(id)sender{
-	float zoomAmt = [sender floatValue];
-	if(fabs(zoomAmt - 1.0) < 0.075) {
-		zoomAmt = 1.0;
-		[sender setFloatValue:1.0];
-	}
-	NSSize zoom = NSMakeSize(zoomAmt, zoomAmt);
-	[view setScale:zoom];
-	[horizontalRuler setScale:zoom];
-	[verticalRuler setScale:zoom];
-	[view setFrameSize:[view calculateBounds].size];
-	[verticalRuler setFrameSize:NSMakeSize([verticalRuler frame].size.width, [view frame].size.height)];
-	[horizontalRuler setFrameSize:NSMakeSize([view frame].size.width, [horizontalRuler frame].size.height)];
-	[view setNeedsDisplay:YES];
-	[horizontalRuler setNeedsDisplay:YES];
-	[verticalRuler setNeedsDisplay:YES];
-}
-
-- (NSString *)keyHelp{
-	return keyHelp;
-}
-
-- (void)setKeyHelp:(NSString *)_keyHelp{
-	if(![keyHelp isEqualToString:_keyHelp]){
-		[keyHelp release];
-		keyHelp = [_keyHelp retain];
-	}
-}
-
-- (IBAction)toggleKeyHelpVisible:(id)sender{
-	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-	BOOL current = [defaults boolForKey:@"SSTFHideKeyHelp"];
-	[defaults setBool:!current forKey:@"SSTFHideKeyHelp"];
 }
 
 - (void)setupStaff:(Staff *)staff{
@@ -131,8 +77,8 @@
 		} else if(![[verticalRuler subviews] containsObject:[staff rulerView]]){
 			[verticalRuler addSubview:[staff rulerView]];
 		}
-		[[staff rulerView] setFrameOrigin:NSMakePoint(0, (int)([StaffController baseOf:staff] -
-													  [StaffController lineHeightOf:staff] * 6.0))];
+		[[staff rulerView] setFrameOrigin:NSMakePoint(0, [StaffController baseOf:staff] -
+													  [StaffController lineHeightOf:staff] * 3.0)];
 	}
 	NSEnumerator *tempos = [[[[self document] getSong] tempoData] objectEnumerator];
 	id tempo;
@@ -141,7 +87,7 @@
 		if([tempo tempoPanel] == nil){
 			[self addHorizontalRulerComponentFor:tempo];
 		}
-		[[tempo tempoPanel] setFrameOrigin:NSMakePoint((int)([MeasureController xOf:[longest getMeasureAtIndex:i]]), 1)];
+		[[tempo tempoPanel] setFrameOrigin:NSMakePoint([MeasureController xOf:[longest getMeasureAtIndex:i]], 1)];
 		i++;
 	}
 	[view setFrameSize:[view calculateBounds].size];
@@ -162,6 +108,7 @@
 - (void)addVerticalRulerComponentFor:(Staff *)staff{
 	if([NSBundle loadNibNamed:@"StaffVerticalRulerComponent" owner:staff]){
 		[verticalRuler addSubview:[staff rulerView]];
+		[staff refreshChannelButton];
 	}
 }
 
@@ -183,9 +130,6 @@
 		[self addToolbarItemWithImage:[NSImage imageNamed:@"play.png"] identifier:@"play" label:@"Play" 
 							  paletteLabel:@"Play" toolTip:@"Begin MIDI playback" target:self 
 							   action:@selector(playSong:) keyEquiv:@"\r" isDefault:YES];
-		[self addToolbarItemWithImage:[NSImage imageNamed:@"playsel.png"] identifier:@"playselected" label:@"Play selected" 
-						 paletteLabel:@"Play selected" toolTip:@"Begin MIDI playback of selected notes" target:self 
-							   action:@selector(playSelection:) keyEquiv:@"$\r" isDefault:YES];
 		[self addToolbarItemWithImage:[NSImage imageNamed:@"stop.png"] identifier:@"stop" label:@"Stop" 
 							  paletteLabel:@"Stop" toolTip:@"Stop MIDI playback" target:self 
 							   action:@selector(stopSong:) keyEquiv:@"\033" isDefault:YES];
@@ -281,6 +225,9 @@
 }
 
 - (BOOL)keyPressedAtLocation:(NSPoint)location withEvent:(NSEvent *)event{
+	if([self handleToolbarKeystroke:event]){
+		return YES;
+	}
 	id modeDict = [self getMode];
 	id song = [[self document] getSong];
 	id target = [ScoreController targetAtLocation:location inSong:song mode:modeDict withEvent:(NSEvent *)event];
@@ -298,11 +245,6 @@
 			[duration selectItemWithTag:sel];
 			return YES;
 		}		
-	}
-	if(!handled){
-		if([self handleToolbarKeystroke:event]){
-			return YES;
-		}
 	}
 	return handled;
 }
@@ -328,13 +270,6 @@
 		[self placeRulerComponents];
 		[scrollView setNeedsDisplay:YES];
 	}
-}
-
-- (BOOL)validateToolbarItem:(NSToolbarItem *)item{
-	if([[item itemIdentifier] isEqualToString:@"playselected"]){
-		return [view selection] != nil;
-	}
-	return YES;
 }
 
 @end

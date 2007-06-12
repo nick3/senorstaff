@@ -15,21 +15,17 @@
 @class Note;
 @class Chord;
 @class Song;
-@class DrumKit;
 @class StaffVerticalRulerComponent;
 #import <AudioToolbox/AudioToolbox.h>
 
 @interface Staff : NSObject <NSCoding> {
 	NSMutableArray *measures;
 	Song *song;
-	NSString *name;
-	int transposition;
 	int channel;
 	IBOutlet StaffVerticalRulerComponent *rulerView;
-	BOOL mute, solo, canMute;
-	DrumKit *drumKit;
-	
-	MusicTrack musicTrack;
+	IBOutlet NSPopUpButton *channelButton;
+	IBOutlet NSButton *muteButton;
+	IBOutlet NSButton *soloButton;
 }
 
 - (id)initWithSong:(Song *)_song;
@@ -37,23 +33,17 @@
 - (void)setSong:(Song *)_song;
 - (Song *)getSong;
 
-- (NSString *)name;
-- (void)setName:(NSString *)_name;
-
-- (int)transposition;
-- (void)setTransposition:(int)_transposition;
-
 - (NSMutableArray *)getMeasures;
 - (void)setMeasures:(NSMutableArray *)_measures;
 
 - (StaffVerticalRulerComponent *)rulerView;
+- (IBAction)setChannel:(id)sender;
 - (IBAction)deleteSelf:(id)sender;
 
 - (Clef *)getClefForMeasure:(Measure *)measure;
 - (KeySignature *)getKeySignatureForMeasure:(Measure *)measure;
 - (TimeSignature *)getTimeSignatureForMeasure:(Measure *)measure;
 - (TimeSignature *)getEffectiveTimeSignatureForMeasure:(Measure *)measure;
-- (BOOL)isCompoundTimeSignatureAt:(Measure *)measure;
 
 - (Measure *)getLastMeasure;
 - (Measure *)getMeasureAtIndex:(unsigned)index;
@@ -61,8 +51,6 @@
 - (Measure *)getMeasureBefore:(Measure *)measure;
 - (Measure *)getMeasureWithKeySignatureBefore:(Measure *)measure;
 - (void)cleanEmptyMeasures;
-
-- (void)transposeFrom:(KeySignature *)oldSig to:(KeySignature *)newSig startingAt:(Measure *)measure;
 
 - (Measure *)getMeasureContainingNote:(NoteBase *)note;
 - (Chord *)getChordContainingNote:(NoteBase *)note;
@@ -73,34 +61,23 @@
 
 - (NSArray *)notesBetweenNote:(id)note1 andNote:(id)note2;
 
-- (void)removeLastNote;
-
 - (void)cleanPanels;
+- (void)refreshChannelButton;
 
 - (BOOL)isDrums;
-- (void)setIsDrums:(BOOL)isDrums;
-- (DrumKit *)drumKit;
-- (IBAction)editDrumKit:(id)sender;
 
 - (void)toggleClefAtMeasure:(Measure *)measure;
 - (void)timeSigChangedAtMeasure:(Measure *)measure top:(int)top bottom:(int)bottom;
 - (void)timeSigChangedAtMeasure:(Measure *)measure top:(int)top bottom:(int)bottom secondTop:(int)secondTop secondBottom:(int)secondBottom;
 - (void)timeSigDeletedAtMeasure:(Measure *)measure;
 
-- (BOOL)canMute;
-- (void)setCanMute:(BOOL)enabled;
+- (IBAction)soloPressed:(id)sender;
+- (void)muteSoloEnabled:(BOOL)enabled;
 
-- (BOOL)mute;
-- (BOOL)solo;
-- (void)setMute:(BOOL)_mute;
-- (void)setSolo:(BOOL)_solo;
+- (BOOL)isMute;
+- (BOOL)isSolo;
 
-- (int)channel;
-- (void)setChannel:(int)_channel;
-
-- (float)addTrackToMIDISequence:(MusicSequence *)musicSequence notesToPlay:(id)selection;
-- (void)addToLilypondString:(NSMutableString *)string;
-- (void)addToMusicXMLString:(NSMutableString *)string;
+- (float)addTrackToMIDISequence:(MusicSequence *)musicSequence;
 
 - (Class)getViewClass;
 - (Class)getControllerClass;

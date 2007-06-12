@@ -12,7 +12,6 @@
 #import "Staff.h"
 #import "NoteBase.h"
 #import "MeasureController.h"
-#import "NoteController.h"
 
 @implementation ChordController
 
@@ -52,14 +51,6 @@
 	return YES;
 }
 
-+ (NSString *)getCommandListFor:(Chord *)chord at:(NSPoint)location mode:(NSDictionary *)mode{
-	NSMutableArray *commands = [NSMutableArray array];
-	[commands addObject:@"click - select chord"];
-	[commands addObject:@"DELETE - delete chord"];
-	[commands addObject:@"OPTION - single note"];
-	return [commands componentsJoinedByString:@"\n"];
-}
-
 + (BOOL)handleKeyPress:(NSEvent *)event at:(NSPoint)location on:(Chord *)chord mode:(NSDictionary *)mode view:(ScoreView *)view{
 	if([[event characters] rangeOfString:[NSString stringWithFormat:@"%C", NSDeleteCharacter]].location != NSNotFound){
 		[[chord undoManager] setActionName:@"deleting note"];
@@ -74,10 +65,6 @@
 	} else {
 		[view setSelection:chord];		
 	}
-}
-
-+ (void)handleDrag:(NSEvent *)event from:(NSPoint)fromLocation to:(NSPoint)location on:(Chord *)chord finished:(BOOL)finished mode:(NSDictionary *)mode view:(ScoreView *)view{
-	[NoteController handleDrag:event from:fromLocation to:location on:chord finished:finished mode:mode view:view];
 }
 
 @end

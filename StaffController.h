@@ -17,7 +17,6 @@
 + (float) heightOf:(Staff *)staff;
 + (float) widthOf:(Staff *)staff;
 + (float) lineHeightOf:(Staff *)staff;
-+ (float)innerHeightOf:(Staff *)staff;
 + (float) topOf:(Staff *)staff;
 + (float) baseOf:(Staff *)staff;
 + (NSRect) boundsOf:(Staff *)staff;

@@ -14,7 +14,6 @@
 #import "KeySignature.h"
 #import "ChromaticKeySignature.h"
 #import "TimeSignature.h"
-#import <Chomp/Chomp.h>
 @class StaffDraw;
 @class DrumStaffDraw;
 @class StaffController;
@@ -28,7 +27,6 @@
 		[firstMeasure setKeySignature:[KeySignature getSignatureWithFlats:0 minor:NO]];
 		measures = [[NSMutableArray arrayWithObject:firstMeasure] retain];
 		song = _song;
-		canMute = YES;
 	}
 	return self;
 }
@@ -47,26 +45,6 @@
 
 - (Song *)getSong{
 	return song;
-}
-
-- (NSString *)name{
-	return name;
-}
-
-- (void)setName:(NSString *)_name{
-	if(![name isEqualToString:_name]){
-		[name release];
-		name = [_name retain];
-	}
-}
-
-- (int)transposition{
-	return transposition;
-}
-
-- (void)setTransposition:(int)_transposition{
-	[[[self undoManager] prepareWithInvocationTarget:self] setTransposition:transposition];
-	transposition = _transposition;
 }
 
 - (NSMutableArray *)getMeasures{
@@ -88,15 +66,13 @@
 	return channel == 9;
 }
 
-- (void)setIsDrums:(BOOL)isDrums{
-	// do nothing - KVO compliance only
+- (IBAction)setChannel:(id)sender{
+	channel = [channelButton selectedTag] - 1;
+	[self sendChangeNotification];
 }
 
-- (IBAction)editDrumKit:(id)sender{
-	[[self undoManager] beginUndoGrouping];
-	[NSBundle loadNibNamed:@"DrumKitDialog" owner:[self drumKit]];
-	[NSApp beginSheet:[[self drumKit] editDialog] modalForWindow:[[[self getSong] document] windowForSheet]
-		modalDelegate:[self drumKit] didEndSelector:@selector(endEditDialog) contextInfo:nil];
+- (void)refreshChannelButton{
+	[channelButton selectItemWithTag:(channel + 1)];
 }
 
 - (IBAction)deleteSelf:(id)sender{
@@ -104,18 +80,20 @@
 	[song removeStaff:self];
 }
 
-- (DrumKit *)drumKit{
-	if(drumKit == nil){
-		drumKit = [[[DrumKit standardKit] copy] retain];
-		[drumKit setStaff:self];
+- (DrumKit *)getDrumKitForMeasure:(Measure *)measure{
+	int index = [measures indexOfObject:measure];
+	while([measure getDrumKit] == nil){
+		if(index == 0) return [DrumKit standardKit];
+		index--;
+		measure = [measures objectAtIndex:index];
 	}
-	return drumKit;
+	return [measure getDrumKit];
 }
 
 - (Clef *)getClefForMeasure:(Measure *)measure{
 	int index = [measures indexOfObject:measure];
 	if([self isDrums]){
-		return [self drumKit];
+		return [self getDrumKitForMeasure:measure];
 	} else {
 		while([measure getClef] == nil){
 			if(index == 0) return [Clef trebleClef];
@@ -146,11 +124,6 @@
 - (TimeSignature *)getEffectiveTimeSignatureForMeasure:(Measure *)measure{
 	int index = [measures indexOfObject:measure];
 	return [song getEffectiveTimeSignatureAt:index];
-}
-
-- (BOOL)isCompoundTimeSignatureAt:(Measure *)measure{
-	int index = [measures indexOfObject:measure];
-	return [song isCompoundTimeSignatureAt:index];
 }
 
 - (Measure *)getLastMeasure{
@@ -249,14 +222,6 @@
 	return nil;
 }
 
-- (void)removeLastNote{
-	Measure *measure = [measures lastObject];
-	while(measure != [measures objectAtIndex:0] && [[measure getNotes] count] == 0){
-		measure = [measures objectAtIndex:([measures indexOfObject:measure] - 1)];
-	}
-	[[measure getNotes] removeLastObject];
-}
-
 - (void)cleanEmptyMeasures{
 	while([measures count] > 1 && [[measures lastObject] isEmpty]){
 		Measure *measure = [measures lastObject];
@@ -268,26 +233,19 @@
 }
 
 - (Note *)findPreviousNoteMatching:(Note *)source inMeasure:(Measure *)measure{
-	if([measure getFirstNote] == source || 
-	   ([[measure getFirstNote] isKindOfClass:[Chord class]] && [[[measure getFirstNote] getNotes] containsObject:source])){
+	if([measure getFirstNote] == source){
 		Measure *prevMeasure = [[measure getStaff] getMeasureBefore:measure];
 		if(prevMeasure != nil){
 			NoteBase *note = [[prevMeasure getNotes] lastObject];
-			if([note respondsToSelector:@selector(pitchMatches:)] && [note pitchMatches:source]){
+			if([note pitchMatches:source]){
 				return note;
-			}
-			if([note isKindOfClass:[Chord class]]){
-				return [note getNoteMatching:source];
 			}
 		}
 		return nil;
 	} else{
 		NoteBase *note = [measure getNoteBefore:source];
-		if([note respondsToSelector:@selector(pitchMatches:)] && [note pitchMatches:source]){
+		if([note pitchMatches:source]){
 			return note;
-		}
-		if([note isKindOfClass:[Chord class]]){
-			return [note getNoteMatching:source];
 		}
 		return nil;
 	}
@@ -448,14 +406,14 @@
 		[measure setClef:[Clef getClefAfter:oldClef]];
 	}
 	Clef *newClef = [self getClefForMeasure:measure];
-	int numLines = [newClef getTranspositionFrom:oldClef];
+	int transposeAmount = [newClef getTranspositionFrom:oldClef];
 	int index = [measures indexOfObject:measure] + 1;
-	[measure transposeBy:numLines];
+	[measure transposeBy:transposeAmount];
 	if(index < [measures count]){
 		while(index < [measures count]){
 			measure = [measures objectAtIndex:index++];
 			if([measure getClef] != nil) break;
-			[measure transposeBy:numLines];
+			[measure transposeBy:transposeAmount];
 		}
 	}
 }
@@ -477,14 +435,6 @@
 	}
 }
 
-- (void)transposeFrom:(KeySignature *)oldSig to:(KeySignature *)newSig startingAt:(Measure *)measure{
-	int transposeAmount = [newSig distanceFrom:oldSig];
-	do {
-		[measure transposeBy:transposeAmount oldSignature:oldSig newSignature:newSig];
-		measure = [[measure getStaff] getMeasureAfter:measure createNew:NO];
-	} while(measure != nil && [measure getKeySignature] == nil);
-}
-
 - (void)cleanPanels{
 	NSEnumerator *measureEnum = [measures objectEnumerator];
 	id measure;
@@ -493,57 +443,31 @@
 	}
 }
 
-- (BOOL)canMute{
-	return canMute && !solo;
-}
-
-- (BOOL)canSolo{
-	return canMute;
-}
-
-- (void)setCanMute:(BOOL)enabled{
-	canMute = enabled;
-}
-
-- (BOOL)mute{
-	return mute;
-}
-
-- (BOOL)solo{
-	return solo;
-}
-
-- (void)setMute:(BOOL)_mute{
-	mute = _mute;
-}
-
-- (void)setSolo:(BOOL)_solo{
-	solo = _solo;
-	if(solo){
-		[self setMute:NO];
+- (IBAction)soloPressed:(id)sender{
+	if([sender state] == NSOnState){
+		[muteButton setState:NSOffState];
 	}
-	[song soloPressed:solo onStaff:self];
+	[song soloPressed:([sender state] == NSOnState) onStaff:self];
 }
 
-- (int)channel{
-	return channel + 1;
+- (void)muteSoloEnabled:(BOOL)enabled{
+	[muteButton setEnabled:enabled];
+	[soloButton setEnabled:enabled];
 }
 
-- (int)realChannel{
-	return channel;
+- (BOOL)isMute{
+	return [muteButton state] == NSOnState;
 }
 
-- (void)setChannel:(int)_channel{
-	[[[self undoManager] prepareWithInvocationTarget:self] setChannel:(channel + 1)];
-	channel = _channel - 1;
-	[self setIsDrums:[self isDrums]]; //trigger KVO
-	[self sendChangeNotification];
+- (BOOL)isSolo{
+	return [soloButton state] == NSOnState;
 }
 
-- (float)addTrackToMIDISequence:(MusicSequence *)musicSequence notesToPlay:(id)selection{
+- (float)addTrackToMIDISequence:(MusicSequence *)musicSequence{
+	MusicTrack musicTrack;
 	if (MusicSequenceNewTrack(*musicSequence, &musicTrack) != noErr) {
 		NSLog(@"Cannot create music track.");
-		return 0;
+		return;
 	}
   
 	NSEnumerator *measureEnum = [measures objectEnumerator];
@@ -555,8 +479,8 @@
 		if([measure isStartRepeat]){
 			isRepeating = YES;
 		}
-		pos += [measure addToMIDITrack:&musicTrack atPosition:pos transpose:transposition
-							 onChannel:channel notesToPlay:selection];
+		pos += [measure addToMIDITrack:&musicTrack atPosition:pos
+				onChannel:channel];
 		if(isRepeating){
 			[repeatMeasures addObject:measure];
 		}
@@ -567,8 +491,8 @@
 				NSEnumerator *repeatMeasuresEnum = [repeatMeasures objectEnumerator];
 				id repeatMeasure;
 				while(repeatMeasure = [repeatMeasuresEnum nextObject]){
-					pos += [repeatMeasure addToMIDITrack:&musicTrack atPosition:pos transpose:transposition
-											   onChannel:channel notesToPlay:selection];
+					pos += [repeatMeasure addToMIDITrack:&musicTrack atPosition:pos
+											   onChannel:channel];
 				}
 			}
 			[repeatMeasures removeAllObjects];
@@ -576,60 +500,30 @@
 	}
 
 	MIDIMetaEvent metaEvent = { 0x2f, 0, 0, 0, 0, { 0 } };
-	if (MusicTrackNewMetaEvent(musicTrack, pos, &metaEvent) != noErr) {
+	if (MusicTrackNewMetaEvent(musicTrack, 13.0, &metaEvent) != noErr) {
 		NSLog(@"Cannot add end of track meta event to track.");
-		return 0;
+		return;
 	}
 
 	return pos;
 }
 
-- (void)addToLilypondString:(NSMutableString *)string{
-	if([self isDrums]){
-		[string appendString:@"\\new DrumStaff {\n\\drummode{\n"];
-	} else {
-		[string appendString:@"\\new Staff {\n"];
-	}
-	if([[self name] length] > 0){
-		[string appendFormat:@"\\set Staff.instrumentName = \"%@\"\n", [self name]];
-	}
-	[[measures do] addToLilypondString:string];
-	[string appendString:@"}\n"];
-	if([self isDrums]){
-		[string appendString:@"}\n"];
-	}
-}
-
-- (void)addToMusicXMLString:(NSMutableString *)string{
-	[[measures do] addToMusicXMLString:string];
-}
-
 - (void)encodeWithCoder:(NSCoder *)coder{
 	[coder encodeObject:measures forKey:@"measures"];
 	[coder encodeInt:channel forKey:@"channel"];
-	[coder encodeInt:transposition forKey:@"transposition"];
-	[coder encodeObject:name forKey:@"name"];
-	[coder encodeObject:drumKit forKey:@"drumKit"];
 }
 
 - (id)initWithCoder:(NSCoder *)coder{
 	if(self = [super init]){
 		[self setMeasures:[coder decodeObjectForKey:@"measures"]];
-		[self setChannel:([coder decodeIntForKey:@"channel"] + 1)];
-		[self setTransposition:[coder decodeIntForKey:@"transposition"]];
-		[self setName:[coder decodeObjectForKey:@"name"]];
-		drumKit = [coder decodeObjectForKey:@"drumKit"];
-		[drumKit setStaff:self];
-		canMute = YES;
+		channel = [coder decodeIntForKey:@"channel"];
 	}
 	return self;
 }
 
 - (void)dealloc{
 	[measures release];
-	[drumKit release];
 	measures = nil;
-	drumKit = nil;
 	song = nil;
 	[super dealloc];
 }

@@ -8,36 +8,17 @@
 
 #import <Cocoa/Cocoa.h>
 #import "Clef.h"
-@class Staff;
+
 
 @interface DrumKit : Clef {
-	NSMutableArray *drums;
-	Staff *staff;
-	
-	IBOutlet NSWindow *editDialog;
+	NSMutableArray *pitches;
+	NSMutableArray *octaves;
+	NSMutableArray *names;
 }
 
 - (id) initWithPitches:(NSArray *)_pitches octaves:(NSArray *)_octaves names:(NSArray *)_names;
 
 - (NSString *)nameAt:(int)position;
-
-- (NSArray *)allDrums;
-
-- (Staff *)staff;
-- (void)setStaff:(Staff *)_staff;
-
-- (NSMutableArray *)drums;
-- (void)setDrums:(NSMutableArray *)_names;
-
-- (NSWindow *)editDialog;
-- (IBAction)closeDialog:(id)sender;
-- (IBAction)cancelDialog:(id)sender;
-
-- (IBAction)import:(id)sender;
-- (IBAction)export:(id)sender;
-
-- (void)appendMusicXMLHeaderToString:(NSMutableString *)string;
-- (NSString *)musicXMLStringForPitch:(int)pitch octave:(int)octave;
 
 + (DrumKit *)standardKit;
 

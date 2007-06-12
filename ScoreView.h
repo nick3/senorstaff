@@ -19,9 +19,7 @@
 	BOOL dragging;
 	id mouseOver;
 	id selection;
-	
-	IBOutlet NSBox *helpBox;
-	
+
 	ATSFontContainerRef container;
 }
 

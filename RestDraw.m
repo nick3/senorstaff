@@ -45,7 +45,8 @@
 			} else{
 				img = [NSImage imageNamed:@"qrest.png"];
 			}
-			[img drawFlippedAtPoint:NSMakePoint(x, middle - [img size].height / 2)];
+			[img compositeToPoint:NSMakePoint(x, middle + [img size].height / 2)
+						operation:NSCompositeSourceOver];
 			break;
 		case 8:
 			if(highlighted){
@@ -53,7 +54,8 @@
 			} else{
 				img = [NSImage imageNamed:@"erest.png"];
 			}
-			[img drawFlippedAtPoint:NSMakePoint(x, middle - [img size].height / 2)];
+			[img compositeToPoint:NSMakePoint(x, middle + [img size].height / 2)
+						operation:NSCompositeSourceOver];
 			break;
 		case 16:
 			if(highlighted){
@@ -61,7 +63,8 @@
 			} else{
 				img = [NSImage imageNamed:@"srest.png"];
 			}
-			[img drawFlippedAtPoint:NSMakePoint(x, middle - [img size].height / 2)];
+			[img compositeToPoint:NSMakePoint(x, middle + [img size].height / 2)
+						operation:NSCompositeSourceOver];
 			break;
 		case 32:
 			if(highlighted){
@@ -69,7 +72,8 @@
 			} else{
 				img = [NSImage imageNamed:@"trest.png"];
 			}
-			[img drawFlippedAtPoint:NSMakePoint(x, middle - [img size].height / 2)];
+			[img compositeToPoint:NSMakePoint(x, middle + [img size].height / 2)
+						operation:NSCompositeSourceOver];
 			break;
 	}
 	if([rest getDotted]){

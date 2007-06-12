@@ -46,7 +46,8 @@ static NSMutableDictionary *timeSigAttrs = nil;
 		[[NSColor blackColor] set];
 	} else if(isTarget){
 		NSImage *sigIns = [NSImage imageNamed:@"timesig_insert.png"];
-		[sigIns drawFlippedAtPoint:NSMakePoint(bounds.origin.x + [[measure getControllerClass] timeSigAreaX:measure], bounds.origin.y - [sigIns size].height)];
+		[sigIns compositeToPoint:NSMakePoint(bounds.origin.x + [[measure getControllerClass] timeSigAreaX:measure], bounds.origin.y)
+					   operation:NSCompositeSourceOver];			
 	}	
 }
 

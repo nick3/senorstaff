@@ -2,33 +2,13 @@
     IBClasses = (
         {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
         {
-            ACTIONS = {
-                keySigChanged = id; 
-                keySigClose = id; 
-                timeSigBottomChanged = id; 
-                timeSigClose = id; 
-                timeSigCollapse = id; 
-                timeSigExpand = id; 
-                timeSigSecondBottomChanged = id; 
-                timeSigSecondTopChanged = id; 
-                timeSigTopChanged = id; 
-            }; 
+            ACTIONS = {keySigChanged = id; keySigClose = id; }; 
             CLASS = Measure; 
             LANGUAGE = ObjC; 
             OUTLETS = {
                 keySigLetter = NSPopUpButton; 
                 keySigMajMin = NSPopUpButton; 
                 keySigPanel = NSView; 
-                keySigTranspose = NSButton; 
-                timeSigBottom = NSPopUpButton; 
-                timeSigExpand = NSButton; 
-                timeSigInnerClose = NSButton; 
-                timeSigPanel = NSView; 
-                timeSigSecondBottom = NSPopUpButton; 
-                timeSigSecondTopStep = NSStepper; 
-                timeSigSecondTopText = NSTextField; 
-                timeSigTopStep = NSStepper; 
-                timeSigTopText = NSTextField; 
             }; 
             SUPERCLASS = NSObject; 
         }

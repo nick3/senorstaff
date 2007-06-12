@@ -7,12 +7,11 @@
 //
 
 #import <Cocoa/Cocoa.h>
-#import <AudioToolbox/AudioToolbox.h>
+#import <CoreMidi/CoreMidi.h>
 @class Staff;
 @class TimeSignature;
 @class MusicDocument;
 @class Measure;
-@class NoteBase;
 
 @interface Song : NSObject <NSCoding>{
 	MusicDocument *doc;
@@ -23,20 +22,13 @@
 	NSMutableArray *repeats;
 	
 	NSTimer *musicPlayerPoll;
-	double playerPosition, playerOffset, playerEnd;
-	MusicPlayer musicPlayer;
-	MusicSequence musicSequence;
-	
-	MusicPlayer feedbackPlayer;
-	MusicSequence feedbackSequence;
-	MusicTrack feedbackTrack;
+	double playerPosition;
+	double playerEnd;
 }
 
 - (id)initWithDocument:(MusicDocument *)_doc;
-- (id)initFromMIDI:(NSData *)data withDocument:(MusicDocument *)_doc;
 
 - (MusicDocument *)document;
-- (void)setDocument:(MusicDocument *)_document;
 - (NSUndoManager *)undoManager;
 
 - (NSMutableArray *)staffs;
@@ -46,7 +38,6 @@
 - (void)removeStaff:(Staff *)staff;
 
 - (double)getPlayerPosition;
-- (double)getPlayerEnd;
 
 - (int)getNumMeasures;
 
@@ -60,7 +51,6 @@
 - (void)setTimeSignature:(TimeSignature *)sig atIndex:(int)measureIndex;
 - (TimeSignature *)getTimeSignatureAt:(int)measureIndex;
 - (TimeSignature *)getEffectiveTimeSignatureAt:(int)measureIndex;
-- (BOOL)isCompoundTimeSignatureAt:(int)measureIndex;
 - (void)refreshTimeSigs;
 - (void)timeSigChangedAtIndex:(int)measureIndex top:(int)top bottom:(int)bottom;
 - (void)timeSigChangedAtIndex:(int)measureIndex top:(int)top bottom:(int)bottom secondTop:(int)secondTop secondBottom:(int)secondBottom;
@@ -79,13 +69,6 @@
 - (void)soloPressed:(BOOL)solo onStaff:(Staff *)staff;
 
 - (void)playToEndpoint:(MIDIEndpointRef)endpoint;
-- (void)playToEndpoint:(MIDIEndpointRef)endpoint notesToPlay:(id)selection;
-- (void)playFeedbackNote:(NoteBase *)note atPosition:(float)pos inMeasure:(Measure *)measure 
-		withExistingNote:(NoteBase *)existingNote toEndpoint:(MIDIEndpointRef)endpoint;
 - (void)stopPlaying;
-
-- (NSData *)asMIDIData;
-- (NSData *)asLilypond;
-- (NSData *)asMusicXML;
 
 @end

@@ -14,7 +14,6 @@
 #import "DrumKit.h"
 #import "Staff.h"
 #import "TimeSignature.h"
-#import "TempoData.h"
 #import "NSView+Fade.h"
 @class MeasureDraw;
 @class DrumMeasureDraw;
@@ -27,14 +26,8 @@
 	if((self = [super init])){
 		notes = [[NSMutableArray array] retain];
 		staff = _staff;
-		cachedNoteGroups = nil;
 	}
 	return self;
-}
-
-- (void)clearCaches {
-	[cachedNoteGroups release];
-	cachedNoteGroups = nil;
 }
 
 - (Staff *)getStaff{
@@ -62,7 +55,6 @@
 }
 
 - (void)setNotes:(NSMutableArray *)_notes{
-	[self clearCaches];
 	[self prepUndo];
 	if(![notes isEqual:_notes]){
 		[notes release];
@@ -83,7 +75,6 @@
 }
 
 - (void)addNote:(NoteBase *)_note atIndex:(float)index tieToPrev:(BOOL)tieToPrev{
-	[self clearCaches];
 	[self prepUndo];
 	if(((int)(index * 2)) % 2 == 0){
 		if(![_note canBeInChord]){
@@ -105,13 +96,11 @@
 }
 
 - (NoteBase *)addNotes:(NSArray *)_notes atIndex:(float)index{
-	[self clearCaches];
 	[self prepUndo];
 	return [self addNotesInternal:_notes atIndex:index consolidate:YES];
 }
 
 - (NoteBase *)addNotesInternal:(NSArray *)_notes atIndex:(float)index consolidate:(BOOL)consolidate{
-	[self clearCaches];
 	NSEnumerator *notesEnum = [_notes reverseObjectEnumerator];
 	NoteBase *note;
 	index = ceil(index);
@@ -159,7 +148,6 @@
 }
 
 - (void)consolidateNote:(NoteBase *)note{
-	[self clearCaches];
 	NoteBase *oldNote = [note getTieFrom];
 	int index = [notes indexOfObject:oldNote];
 	NoteBase *noteToAdd = [note copy];
@@ -196,7 +184,6 @@
 }
 
 - (NoteBase *)refreshNotes:(NoteBase *)rtn{
-	[self clearCaches];
 	float totalDuration = [self getTotalDuration];
 	float maxDuration = [[self getEffectiveTimeSignature] getMeasureDuration];
 	NSMutableArray *notesToPush = [NSMutableArray array];
@@ -249,7 +236,6 @@
 }
 
 - (void)grabNotesFromNextMeasure{
-	[self clearCaches];
 	if([staff getLastMeasure] == self) return;
 	Measure *nextMeasure = [staff getMeasureAfter:self createNew:YES];
 	[nextMeasure prepUndo];
@@ -285,27 +271,20 @@
 }
 
 - (void)removeNoteAtIndex:(float)x temporary:(BOOL)temp{
-	[self clearCaches];
-	NoteBase *note = [notes objectAtIndex:floor(x)];
-	[self removeNote:note temporary:temp];
-}
-
-- (void)removeNote:(NoteBase *)note temporary:(BOOL)temp{
-	[self clearCaches];
 	[self prepUndo];
+	NoteBase *note = [notes objectAtIndex:floor(x)];
 	if(!temp){
 		[note prepareForDelete];
 	}
-	[notes removeObject:note];
+	[notes removeObjectAtIndex:floor(x)];
 	[self grabNotesFromNextMeasure];
 	if(!temp){
 		[staff cleanEmptyMeasures];
 		[self sendChangeNotification];
-	}	
+	}
 }
 
 - (void)addNote:(NoteBase *)newNote toChordAtIndex:(float)index{
-	[self clearCaches];
 	NoteBase *note = [notes objectAtIndex:index];
 	if([note isKindOfClass:[Chord class]]){
 		[note addNote:newNote];
@@ -319,7 +298,6 @@
 }
 
 - (void)removeNote:(NoteBase *)note fromChordAtIndex:(float)index{
-	[self clearCaches];
 	NoteBase *chord = [notes objectAtIndex:index];
 	if([chord isKindOfClass:[Chord class]]){
 		if([[chord getNotes] containsObject:note]){
@@ -367,9 +345,6 @@
 }
 
 - (NSArray *)getNoteGroups{
-	if(cachedNoteGroups != nil) {
-		return cachedNoteGroups;
-	}
 	NSMutableArray *groups = [NSMutableArray array];
 	NSMutableArray *group = [NSMutableArray array];
 	NSEnumerator *notesEnum = [notes objectEnumerator];
@@ -406,7 +381,6 @@
 	if([group count] > 1){
 		[groups addObject:group];
 	}
-	cachedNoteGroups = [groups retain];
 	return groups;
 }
 
@@ -455,16 +429,16 @@
 	return [[[self getStaff] getSong] repeatIsOpenAt:[self indexInStaff]];
 }
 
-- (Repeat *)getRepeatStartingHere{
-	return [[[self getStaff] getSong] repeatStartingAt:[self indexInStaff]];
-}
-
 - (Repeat *)getRepeatEndingHere{
 	return [[[self getStaff] getSong] repeatEndingAt:[self indexInStaff]];
 }
 
 - (Clef *)getClef{
 	return clef;
+}
+
+- (DrumKit *)getDrumKit{
+	return drumKit;
 }
 
 - (Clef *)getEffectiveClef{
@@ -519,7 +493,6 @@
 }
 
 - (void)timeSignatureChangedFrom:(float)oldTotal to:(float)newTotal{
-	[self clearCaches];
 	if(newTotal < oldTotal){
 		[self prepUndo];
 		[self refreshNotes:nil];
@@ -558,13 +531,6 @@
 	int index = [notes indexOfObject:source];
 	if(index != NSNotFound && index > 0){
 		return [notes objectAtIndex:index-1];
-	}
-	NSEnumerator *notesEnum = [notes objectEnumerator];
-	id note;
-	while(note = [notesEnum nextObject]){
-		if([note isKindOfClass:[Chord class]] && [[note getNotes] containsObject:source]){
-			return [self getNoteBefore:note];
-		}
 	}
 	return nil;
 }
@@ -636,18 +602,15 @@
 	return [nextMeasureNotes objectAtIndex:0];
 }
 
-- (void)transposeBy:(int)numLines{
-	[self clearCaches];
-	[[notes do] transposeBy:numLines];
-}
-
-- (void)transposeBy:(int)numHalfSteps oldSignature:(KeySignature *)oldSig newSignature:(KeySignature *)newSig{
-	[self clearCaches];
-	[[notes do] transposeBy:numHalfSteps oldSignature:oldSig newSignature:newSig];
+- (void)transposeBy:(int)transposeAmount{
+	NSEnumerator *notesEnum = [notes objectEnumerator];
+	id note;
+	while(note = [notesEnum nextObject]){
+		[note transposeBy:transposeAmount];
+	}
 }
 
 - (IBAction)keySigChanged:(id)sender{
-	[self clearCaches];
 	[[self undoManager] setActionName:@"changing key signature"];
 	KeySignature *newSig;
 	if([[[keySigMajMin selectedItem] title] isEqual:@"major"]){
@@ -662,9 +625,6 @@
 			newSig = [KeySignature getMajorSignatureAtIndexFromA:[keySigLetter indexOfSelectedItem]];
 			[keySigMajMin selectItemWithTitle:@"major"];
 		}
-	}
-	if([keySigTranspose state] == NSOnState){
-		[staff transposeFrom:keySig to:newSig startingAt:self];		
 	}
 	Measure *prev = [staff getMeasureBefore:self];
 	if(prev != nil && [[prev getEffectiveKeySignature] isEqualTo:newSig]){
@@ -693,7 +653,6 @@
 }
 
 - (void)processTimeSignatureChange:(BOOL)compound{
-	[self clearCaches];
 	if(compound){
 		[staff timeSigChangedAtMeasure:self top:[timeSigTopText intValue] bottom:[[[timeSigBottom selectedItem] title] intValue]
 							 secondTop:[timeSigSecondTopText intValue] secondBottom:[[[timeSigSecondBottom selectedItem] title] intValue]];
@@ -731,7 +690,6 @@
 }
 
 - (void)timeSigDelete{
-	[self clearCaches];
 	[[self undoManager] setActionName:@"deleting time signature"];
 	[staff timeSigDeletedAtMeasure:self];
 }
@@ -776,97 +734,16 @@
 	[self keySigClose:nil];
 }
 
-- (NSDictionary *)getAccidentalsAtPosition:(float)pos{
-	NSMutableDictionary *accidentals = [NSMutableDictionary dictionary];
-	int i;
-	KeySignature *keySig = [self getEffectiveKeySignature];
-	for(i = 0; i < pos; i++){
-		NoteBase *note = [notes objectAtIndex:i];
-		if([note respondsToSelector:@selector(getEffectivePitchWithKeySignature:priorAccidentals:)]){
-			[note getEffectivePitchWithKeySignature:keySig priorAccidentals:accidentals];			
-		}
-	}
-	return accidentals;
-}
-
-- (float)addToMIDITrack:(MusicTrack *)musicTrack atPosition:(float)pos transpose:(int)transposition onChannel:(int)channel notesToPlay:(id)selection{
+- (float)addToMIDITrack:(MusicTrack *)musicTrack atPosition:(float)pos onChannel:(int)channel{
 	float initPos = pos;
 	NSEnumerator *noteEnum = [notes objectEnumerator];
 	NSMutableDictionary *accidentals = [NSMutableDictionary dictionary];
 	id note;
 	while(note = [noteEnum nextObject]){
-		if(selection == nil || note == selection || 
-		   ([selection respondsToSelector:@selector(containsObject:)] && [selection containsObject:note])){
-			pos += [note addToMIDITrack:musicTrack atPosition:pos withKeySignature:[self getEffectiveKeySignature]
-							accidentals:accidentals transpose:transposition onChannel:channel];			
-		}
+		pos += [note addToMIDITrack:musicTrack atPosition:pos withKeySignature:[self getEffectiveKeySignature]
+				accidentals:accidentals onChannel:channel];
 	}
 	return pos - initPos;
-}
-
-- (void)addToLilypondString:(NSMutableString *)string{
-	TempoData *tempo = [[[staff getSong] tempoData] objectAtIndex:[[staff getMeasures] indexOfObject:self]];
-	if(![tempo empty]){
-		[string appendFormat:@"\\tempo 4=%d ", (int)[tempo tempo]];
-	}
-	if([self isStartRepeat]){
-		[string appendFormat:@"\\repeat volta %d {\n", [[self getRepeatStartingHere] numRepeats]];
-	}
-	if(clef != nil && ![staff isDrums]){
-		[clef addToLilypondString:string];
-	}
-	if(![[self getTimeSignature] isKindOfClass:[NSNull class]]){
-		[[self getTimeSignature] addToLilypondString:string];
-	} else if([staff isCompoundTimeSignatureAt:self]){
-		[[self getEffectiveTimeSignature] addToLilypondString:string];
-	}
-	if(keySig != nil && ![staff isDrums]){
-		[keySig addToLilypondString:string];
-	}
-	NSMutableDictionary *accidentals = [NSMutableDictionary dictionary];
-	[[notes do] addToLilypondString:string accidentals:accidentals];
-	if([self isEndRepeat]){
-		[string appendString:@"\n}\n"];
-	}
-}
-
-- (void)addToMusicXMLString:(NSMutableString *)string{
-	int index = [[staff getMeasures] indexOfObject:self];
-	[string appendFormat:@"<measure number=\"%d\">\n", (index + 1)];
-	[string appendString:@"<attributes>\n"];
-	if(index == 0){
-		[string appendString:@"<divisions>48</divisions>\n"];
-		if([staff transposition] != 0){
-			[string appendFormat:@"<transpose>\n<chromatic>%d</chromatic>\n</transpose>\n", [staff transposition]];
-		}
-	}
-	if(keySig != nil && ![staff isDrums]){
-		[keySig addToMusicXMLString:string];
-	}
-	if(![[self getTimeSignature] isKindOfClass:[NSNull class]]){
-		[[self getTimeSignature] addToMusicXMLString:string];
-	} else if([staff isCompoundTimeSignatureAt:self]){
-		[[self getEffectiveTimeSignature] addToMusicXMLString:string];
-	}
-	if(clef != nil && ![staff isDrums]){
-		[clef addToMusicXMLString:string];
-	} else if([staff isDrums]){
-		[string appendString:@"<clef>\n<sign>percussion</sign>\n</clef>\n"];
-	}
-	[string appendString:@"</attributes>\n"];
-	TempoData *tempo = [[[staff getSong] tempoData] objectAtIndex:[[staff getMeasures] indexOfObject:self]];
-	if(![tempo empty]){
-		[string appendFormat:@"<sound tempo=\"%d\"/>\n", (int)[tempo tempo]];
-	}
-	if([self isStartRepeat]){
-		[string appendString:@"<barline location=\"left\">\n<bar-style>heavy-light</bar-style>\n<repeat direction=\"forward\"/>\n</barline>"];
-	}
-	NSMutableDictionary *accidentals = [NSMutableDictionary dictionary];
-	[[notes do] addToMusicXMLString:string accidentals:accidentals];
-	if([self isEndRepeat]){
-		[string appendFormat:@"<barline location=\"left\">\n<bar-style>light-heavy</bar-style>\n<repeat direction=\"backward\" times=\"%d\"/>\n</barline>", [self getNumRepeats]];
-	}
-	[string appendString:@"</measure>\n"];
 }
 
 - (void)encodeWithCoder:(NSCoder *)coder{
@@ -877,6 +754,7 @@
 	if(clef == [Clef bassClef]){
 		[coder encodeObject:@"bass" forKey:@"clef"];
 	}
+	[coder encodeObject:drumKit forKey:@"drumKit"];
 	if(keySig != nil){
 		[coder encodeInt:[keySig getNumFlats] forKey:@"keySigFlats"];
 		[coder encodeInt:[keySig getNumSharps] forKey:@"keySigSharps"];
@@ -897,6 +775,7 @@
 		} else if([deClef isEqualToString:@"bass"]){
 			[self setClef:[Clef bassClef]];
 		}
+		drumKit = [coder decodeObjectForKey:@"drumKit"];
 		int flats = [coder decodeIntForKey:@"keySigFlats"];
 		int sharps = [coder decodeIntForKey:@"keySigSharps"];
 		BOOL minor = [coder decodeBoolForKey:@"keySigMinor"];
@@ -908,7 +787,11 @@
 			[self setKeySignature:[KeySignature getSignatureWithFlats:0 minor:NO]];
 		}
 		[self setNotes:[coder decodeObjectForKey:@"notes"]];
-		[[notes do] setStaff:staff];
+		NSEnumerator *notesEnum = [notes objectEnumerator];
+		id note;
+		while(note = [notesEnum nextObject]){
+			[note setStaff:staff];
+		}
 	}
 	return self;
 }
@@ -918,12 +801,10 @@
 	[keySig release];
 	[notes release];
 	[anim release];
-	[cachedNoteGroups release];
 	clef = nil;
 	keySig = nil;
 	notes = nil;
 	anim = nil;
-	cachedNoteGroups = nil;
 	[super dealloc];
 }
 

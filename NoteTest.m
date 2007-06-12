@@ -8,17 +8,12 @@
 
 #import "NoteTest.h"
 #import "Note.h"
-#import "NoteBase.h"
 #import "Staff.h"
 #import "Measure.h"
-#include "TestUtil.h"
-
-extern int enableMIDI;
 
 @implementation NoteTest
 
 - (void)setUp{
-	enableMIDI = 0;
 	note = [[Note alloc] initWithPitch:4 octave:3 duration:2 dotted:YES accidental:SHARP onStaff:nil];
 }
 - (void)tearDown{
@@ -26,32 +21,32 @@ extern int enableMIDI;
 }
 
 - (void) testGetEffectiveDuration{
-	STAssertEquals([note getEffectiveDuration], effDuration(2, YES), @"Wrong duration returned for note.");
+	STAssertEquals([note getEffectiveDuration], (float)2.25, @"Wrong duration returned for note.");
 }
 
 - (void) testBasicTryToFill{
-	[note tryToFill:effDuration(2, NO)];
-	STAssertEquals([note getEffectiveDuration], effDuration(2, NO), @"Wrong duration when trying to fill.");
+	[note tryToFill:1.5];
+	STAssertEquals([note getEffectiveDuration], (float)1.5, @"Wrong duration when trying to fill.");
 }
 
 - (void) testComplexTryToFill{
-	[note tryToFill:(effDuration(4, NO) + effDuration(32, YES))];
-	STAssertEquals([note getEffectiveDuration], effDuration(4, NO), @"Wrong duration when trying to fill.");
+	[note tryToFill:0.793847];
+	STAssertEquals([note getEffectiveDuration], (float)0.75, @"Wrong duration when trying to fill.");
 }
 
 - (void) testSubtractDurationReturningSingleNote{
-	NSArray *array = [note subtractDuration:effDuration(4, NO)];
+	NSArray *array = [note subtractDuration:0.75];
 	STAssertEquals([array count], (unsigned)1, @"Wrong number of notes returned after subtracting duration.");
-	STAssertEquals([[array objectAtIndex:0] getEffectiveDuration], effDuration(2, NO), @"Wrong duration left after subtracting duration.");
-	STAssertEquals([note getEffectiveDuration], effDuration(2, YES), @"Original note object modified during subtract duration.");
+	STAssertEquals([[array objectAtIndex:0] getEffectiveDuration], (float)1.5, @"Wrong duration left after subtracting duration.");
+	STAssertEquals([note getEffectiveDuration], (float)2.25, @"Original note object modified during subtract duration.");
 }
 
 - (void) testSubtractDurationReturningMultipleNotes{
-	NSArray *array = [note subtractDuration:effDuration(8, NO)];
+	NSArray *array = [note subtractDuration:0.375];
 	STAssertEquals([array count], (unsigned)2, @"Wrong number of notes returned after subtracting duration.");
 	STAssertEquals([[array objectAtIndex:0] getEffectiveDuration] + [[array objectAtIndex:1] getEffectiveDuration],
-				   effDuration(2, NO) + effDuration(8, NO), @"Wrong duration left after subtracting duration.");
-	STAssertEquals([note getEffectiveDuration], effDuration(2, YES), @"Original note object modified during subtract duration.");
+				   (float)1.875, @"Wrong duration left after subtracting duration.");
+	STAssertEquals([note getEffectiveDuration], (float)2.25, @"Original note object modified during subtract duration.");
 	STAssertEqualObjects([[array objectAtIndex:0] getTieTo], [array objectAtIndex:1], @"Notes returned from subtracting duration not tied together.");
 }
 
@@ -273,161 +268,6 @@ extern int enableMIDI;
 	[secondNote release];
 	[thirdNote release];
 	[staff release];
-}
-
-- (void)testTransposeNoAccidental {
-	KeySignature *oldSig = [KeySignature getSignatureWithSharps:0 minor:NO];
-	KeySignature *newSig = [KeySignature getSignatureWithSharps:1 minor:NO];
-	Note *note = [[Note alloc] initWithPitch:4 octave:3 duration:4 dotted:NO accidental:NO_ACC onStaff:nil];
-	int oldPitch = [note getEffectivePitchWithKeySignature:oldSig priorAccidentals:nil];
-	[note transposeBy:7 oldSignature:oldSig newSignature:newSig];
-	STAssertEquals((int)[note getEffectivePitchWithKeySignature:newSig priorAccidentals:nil], oldPitch + 7, @"Note transposed incorrectly.");
-	[note transposeBy:-7 oldSignature:newSig newSignature:oldSig];
-	STAssertEquals((int)[note getEffectivePitchWithKeySignature:oldSig priorAccidentals:nil], oldPitch, @"Note transposed incorrectly.");
-	[note release];
-}
-
-- (void)testTransposeSharp {
-	KeySignature *oldSig = [KeySignature getSignatureWithSharps:0 minor:NO];
-	KeySignature *newSig = [KeySignature getSignatureWithSharps:1 minor:NO];
-	Note *note = [[Note alloc] initWithPitch:4 octave:3 duration:4 dotted:NO accidental:SHARP onStaff:nil];
-	int oldPitch = [note getEffectivePitchWithKeySignature:oldSig priorAccidentals:nil];
-	[note transposeBy:7 oldSignature:oldSig newSignature:newSig];
-	STAssertEquals((int)[note getEffectivePitchWithKeySignature:newSig priorAccidentals:nil], oldPitch + 7, @"Note transposed incorrectly.");
-	[note transposeBy:-7 oldSignature:newSig newSignature:oldSig];
-	STAssertEquals((int)[note getEffectivePitchWithKeySignature:oldSig priorAccidentals:nil], oldPitch, @"Note transposed incorrectly.");
-	[note release];
-}
-
-- (void)testTransposeSharpWhenNewKeySigHasSharp {
-	KeySignature *oldSig = [KeySignature getSignatureWithSharps:0 minor:NO];
-	KeySignature *newSig = [KeySignature getSignatureWithSharps:1 minor:NO];
-	Note *note = [[Note alloc] initWithPitch:6 octave:3 duration:4 dotted:NO accidental:SHARP onStaff:nil];
-	int oldPitch = [note getEffectivePitchWithKeySignature:oldSig priorAccidentals:nil];
-	[note transposeBy:7 oldSignature:oldSig newSignature:newSig];
-	STAssertEquals((int)[note getEffectivePitchWithKeySignature:newSig priorAccidentals:nil], oldPitch + 7, @"Note transposed incorrectly.");
-	[note transposeBy:-7 oldSignature:newSig newSignature:oldSig];
-	STAssertEquals((int)[note getEffectivePitchWithKeySignature:oldSig priorAccidentals:nil], oldPitch, @"Note transposed incorrectly.");
-	[note release];
-}
-
-- (void)testTransposeSharpWhenNewKeySigHasFlat {
-	KeySignature *oldSig = [KeySignature getSignatureWithSharps:0 minor:NO];
-	KeySignature *newSig = [KeySignature getSignatureWithFlats:1 minor:NO];
-	Note *note = [[Note alloc] initWithPitch:4 octave:3 duration:4 dotted:NO accidental:SHARP onStaff:nil];
-	int oldPitch = [note getEffectivePitchWithKeySignature:oldSig priorAccidentals:nil];
-	[note transposeBy:5 oldSignature:oldSig newSignature:newSig];
-	STAssertEquals((int)[note getEffectivePitchWithKeySignature:newSig priorAccidentals:nil], oldPitch + 5, @"Note transposed incorrectly.");
-	[note transposeBy:-5 oldSignature:newSig newSignature:oldSig];
-	STAssertEquals((int)[note getEffectivePitchWithKeySignature:oldSig priorAccidentals:nil], oldPitch, @"Note transposed incorrectly.");
-	[note release];
-}
-
-- (void)testTransposeFlat {
-	KeySignature *oldSig = [KeySignature getSignatureWithSharps:0 minor:NO];
-	KeySignature *newSig = [KeySignature getSignatureWithSharps:1 minor:NO];
-	Note *note = [[Note alloc] initWithPitch:4 octave:3 duration:4 dotted:NO accidental:FLAT onStaff:nil];
-	int oldPitch = [note getEffectivePitchWithKeySignature:oldSig priorAccidentals:nil];
-	[note transposeBy:7 oldSignature:oldSig newSignature:newSig];
-	STAssertEquals((int)[note getEffectivePitchWithKeySignature:newSig priorAccidentals:nil], oldPitch + 7, @"Note transposed incorrectly.");
-	[note transposeBy:-7 oldSignature:newSig newSignature:oldSig];
-	STAssertEquals((int)[note getEffectivePitchWithKeySignature:oldSig priorAccidentals:nil], oldPitch, @"Note transposed incorrectly.");
-	[note release];
-}
-
-- (void)testTransposeFlatWhenNewKeySigHasSharp {
-	KeySignature *oldSig = [KeySignature getSignatureWithSharps:0 minor:NO];
-	KeySignature *newSig = [KeySignature getSignatureWithSharps:1 minor:NO];
-	Note *note = [[Note alloc] initWithPitch:6 octave:3 duration:4 dotted:NO accidental:FLAT onStaff:nil];
-	int oldPitch = [note getEffectivePitchWithKeySignature:oldSig priorAccidentals:nil];
-	[note transposeBy:7 oldSignature:oldSig newSignature:newSig];
-	STAssertEquals((int)[note getEffectivePitchWithKeySignature:newSig priorAccidentals:nil], oldPitch + 7, @"Note transposed incorrectly.");
-	[note transposeBy:-7 oldSignature:newSig newSignature:oldSig];
-	STAssertEquals((int)[note getEffectivePitchWithKeySignature:oldSig priorAccidentals:nil], oldPitch, @"Note transposed incorrectly.");
-	[note release];
-}
-
-- (void)testTransposeFlatWhenNewKeySigHasFlat {
-	KeySignature *oldSig = [KeySignature getSignatureWithSharps:0 minor:NO];
-	KeySignature *newSig = [KeySignature getSignatureWithFlats:3 minor:YES];
-	Note *note = [[Note alloc] initWithPitch:6 octave:3 duration:4 dotted:NO accidental:FLAT onStaff:nil];
-	int oldPitch = [note getEffectivePitchWithKeySignature:oldSig priorAccidentals:nil];
-	[note transposeBy:0 oldSignature:oldSig newSignature:newSig];
-	STAssertEquals((int)[note getEffectivePitchWithKeySignature:newSig priorAccidentals:nil], oldPitch, @"Note transposed incorrectly.");
-	[note transposeBy:0 oldSignature:newSig newSignature:oldSig];
-	STAssertEquals((int)[note getEffectivePitchWithKeySignature:oldSig priorAccidentals:nil], oldPitch, @"Note transposed incorrectly.");
-	[note release];
-}
-
-- (void)testSetPitchBreaksTies {
-	Note *note = [[Note alloc] initWithPitch:6 octave:3 duration:4 dotted:NO accidental:NO_ACC onStaff:nil];
-	Note *preNote = [[Note alloc] initWithPitch:6 octave:3 duration:4 dotted:NO accidental:NO_ACC onStaff:nil];
-	Note *postNote = [[Note alloc] initWithPitch:6 octave:3 duration:4 dotted:NO accidental:NO_ACC onStaff:nil];
-	[note tieFrom:preNote];
-	[preNote tieTo:note];
-	[note tieTo:postNote];
-	[preNote tieFrom:note];
-	[note setPitch:2 finished:YES];
-	STAssertNil([note getTieFrom], @"Changing note pitch failed to break incoming tie.");
-	STAssertNil([preNote getTieTo], @"Changing note pitch failed to break incoming tie.");
-	STAssertNil([note getTieTo], @"Changing note pitch failed to break outgoing tie.");
-	STAssertNil([postNote getTieFrom], @"Changing note pitch failed to break outgoing tie.");
-	[note release];
-	[preNote release];
-	[postNote release];
-}
-
-- (void)testSetOctaveBreaksTies {
-	Note *note = [[Note alloc] initWithPitch:6 octave:3 duration:4 dotted:NO accidental:NO_ACC onStaff:nil];
-	Note *preNote = [[Note alloc] initWithPitch:6 octave:3 duration:4 dotted:NO accidental:NO_ACC onStaff:nil];
-	Note *postNote = [[Note alloc] initWithPitch:6 octave:3 duration:4 dotted:NO accidental:NO_ACC onStaff:nil];
-	[note tieFrom:preNote];
-	[preNote tieTo:note];
-	[note tieTo:postNote];
-	[preNote tieFrom:note];
-	[note setOctave:4 finished:YES];
-	STAssertNil([note getTieFrom], @"Changing note pitch failed to break incoming tie.");
-	STAssertNil([preNote getTieTo], @"Changing note pitch failed to break incoming tie.");
-	STAssertNil([note getTieTo], @"Changing note pitch failed to break outgoing tie.");
-	STAssertNil([postNote getTieFrom], @"Changing note pitch failed to break outgoing tie.");
-	[note release];
-	[preNote release];
-	[postNote release];
-}
-
-- (void)testSetDottedToTrueRefreshesMeasure {
-	[self setUpUndoTest];
-	Note *first = [[Note alloc] initWithPitch:3 octave:4 duration:4 dotted:NO accidental:NO_ACC onStaff:staff];
-	Note *second = [[Note alloc] initWithPitch:3 octave:4 duration:4 dotted:NO accidental:NO_ACC onStaff:staff];
-	Note *third = [[Note alloc] initWithPitch:3 octave:4 duration:4 dotted:NO accidental:NO_ACC onStaff:staff];
-	Note *fourth = [[Note alloc] initWithPitch:3 octave:4 duration:4 dotted:NO accidental:NO_ACC onStaff:staff];
-	[measure setNotes:[NSMutableArray arrayWithObjects:first, second, third, fourth, nil]];
-	[fourth setDotted:YES];
-	STAssertEquals([[[staff getMeasureAfter:measure createNew:NO] getNotes] count], (unsigned)1, @"Excess not pushed to second measure after setting dotted.");
-	[first release];
-	[second release];
-	[third release];
-	[fourth release];
-	[self tearDownUndoTest];
-}
-- (void)testSetDottedToFalseRefreshesMeasure {
-	[self setUpUndoTest];
-	Note *first = [[Note alloc] initWithPitch:3 octave:4 duration:4 dotted:NO accidental:NO_ACC onStaff:staff];
-	Note *second = [[Note alloc] initWithPitch:3 octave:4 duration:4 dotted:NO accidental:NO_ACC onStaff:staff];
-	Note *third = [[Note alloc] initWithPitch:3 octave:4 duration:4 dotted:YES accidental:NO_ACC onStaff:staff];
-	Note *fourth = [[Note alloc] initWithPitch:3 octave:4 duration:8 dotted:NO accidental:NO_ACC onStaff:staff];
-	[measure setNotes:[NSMutableArray arrayWithObjects:first, second, third, fourth, nil]];
-	Note *fifth = [[Note alloc] initWithPitch:3 octave:4 duration:8 dotted:NO accidental:NO_ACC onStaff:staff];
-	Measure *secondMeasure = [staff getMeasureAfter:measure createNew:YES];
-	[secondMeasure setNotes:[NSMutableArray arrayWithObject:fifth]];
-	[third setDotted:NO];
-	STAssertEquals([staff getMeasureContainingNote:fifth], measure, @"Space not filled after setting dotted.");
-	[first release];
-	[second release];
-	[third release];
-	[fourth release];
-	[fifth release];
-	[self tearDownUndoTest];
 }
 
 // ----- undo/redo tests -----

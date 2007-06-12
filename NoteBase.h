@@ -42,20 +42,14 @@
 
 - (float)addToMIDITrack:(MusicTrack *)musicTrack atPosition:(float)pos
 	   withKeySignature:(KeySignature *)sig accidentals:(NSMutableDictionary *)accidentals
-			  transpose:(int)transposition onChannel:(int)channel;
-- (void)addToLilypondString:(NSMutableString *)string accidentals:(NSMutableDictionary *)accidentals;
-- (void)addNoteToLilypondString:(NSMutableString *)string accidentals:(NSMutableDictionary *)accidentals;
-- (void)addDurationToLilypondString:(NSMutableString *)string;
-- (void)addToMusicXMLString:(NSMutableString *)string accidentals:(NSMutableDictionary *)accidentals;
-- (void)addDurationToMusicXMLString:(NSMutableString *)string;
+			  onChannel:(int)channel;
 
-- (void)transposeBy:(int)numLines;
-- (void)transposeBy:(int)numHalfSteps oldSignature:(KeySignature *)oldSig newSignature:(KeySignature *)newSig;
+- (void)transposeBy:(int)transposeAmount;
 
 - (void)prepareForDelete;
 
 - (NSArray *)subtractDuration:(float)maxDuration;
-- (BOOL)tryToFill:(float)maxDuration;
+- (void)tryToFill:(float)maxDuration;
 
 - (void)tieTo:(NoteBase *)note;
 - (NoteBase *)getTieTo;

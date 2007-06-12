@@ -22,7 +22,7 @@
 + (Clef *)trebleClef{
 	static Clef *treble;
 	if(treble == nil){
-		treble = [[[Clef alloc] initWithPitchOffset:2 withOctaveOffset:5] retain];
+		treble = [[[Clef alloc] initWithPitchOffset:2 withOctaveOffset:4] retain];
 	}
 	return treble;
 }
@@ -30,7 +30,7 @@
 + (Clef *)bassClef{
 	static Clef *bass;
 	if(bass == nil){
-		bass = [[[Clef alloc] initWithPitchOffset:4 withOctaveOffset:3] retain];
+		bass = [[[Clef alloc] initWithPitchOffset:4 withOctaveOffset:2] retain];
 	}
 	return bass;
 }
@@ -69,22 +69,6 @@
 
 - (int)getTranspositionFrom:(Clef *)clef{
 	return ([self getOctaveForPosition:0] - [clef getOctaveForPosition:0]) * 7;
-}
-
-- (void)addToLilypondString:(NSMutableString *)string{
-	if(self == [Clef trebleClef]){
-		[string appendString:@"\\clef treble "];
-	} else if(self == [Clef bassClef]){
-		[string appendString:@"\\clef bass "];
-	}
-}
-
-- (void)addToMusicXMLString:(NSMutableString *)string{
-	if(self == [Clef trebleClef]){
-		[string appendString:@"<clef>\n<sign>G</sign>\n<line>2</line>\n</clef>\n"];
-	} else if(self == [Clef bassClef]){
-		[string appendString:@"<clef>\n<sign>F</sign>\n<line>4</line>\n</clef>\n"];
-	}
 }
 
 - (Class)getViewClass{

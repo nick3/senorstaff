@@ -13,14 +13,10 @@
 #import "TempoData.h"
 #import "TimeSignature.h"
 #import "Note.h"
-#include "TestUtil.h"
-
-extern int enableMIDI;
 
 @implementation SongTest
 
 - (void) setUp{
-	enableMIDI = 0;
 	song = [[Song alloc] initWithDocument:nil];
 }
 - (void) tearDown{
@@ -43,7 +39,7 @@ extern int enableMIDI;
 }
 
 - (void) testGetEffectiveTimeSigForMeasureWithTimeSig{
-	STAssertNotNil([song getEffectiveTimeSignatureAt:0], @"Error getting time signature from measure, or SongTest has bad assumption about initialization of Song.");
+	STAssertNotNil([song getEffectiveTimeSignatureAt:0], @"SongTest has bad assumption about initialization of Song.");
 }
 - (void) testGetEffectiveTimeSigForMeasureWithoutTimeSig{
 	[[[song staffs] lastObject] addMeasure];
@@ -144,13 +140,13 @@ extern int enableMIDI;
 	[mgr beginUndoGrouping];
 	[song timeSigChangedAtIndex:1 top:3 bottom:4];
 	[mgr undo];
-	STAssertEquals([[measure getEffectiveTimeSignature] getMeasureDuration], effDuration(1, NO), @"Previous measure affected by undoing time signature change.");
-	STAssertEquals([[secondMeasure getEffectiveTimeSignature] getMeasureDuration], effDuration(1, NO), @"Failed to undo time signature change.");
-	STAssertEquals([[thirdMeasure getEffectiveTimeSignature] getMeasureDuration], effDuration(1, NO), @"Following measure not affected by undoing time signature change.");
+	STAssertEquals([[measure getEffectiveTimeSignature] getMeasureDuration], (float)3.0, @"Previous measure affected by undoing time signature change.");
+	STAssertEquals([[secondMeasure getEffectiveTimeSignature] getMeasureDuration], (float)3.0, @"Failed to undo time signature change.");
+	STAssertEquals([[thirdMeasure getEffectiveTimeSignature] getMeasureDuration], (float)3.0, @"Following measure not affected by undoing time signature change.");
 	[mgr redo];
-	STAssertEquals([[measure getEffectiveTimeSignature] getMeasureDuration], effDuration(1, NO), @"Previous measure affected by redoing time signature change.");
-	STAssertEquals([[secondMeasure getEffectiveTimeSignature] getMeasureDuration], effDuration(2, YES), @"Failed to redo time signature change.");
-	STAssertEquals([[thirdMeasure getEffectiveTimeSignature] getMeasureDuration], effDuration(2, YES), @"Following measure not affected by redoing time signature change.");
+	STAssertEquals([[measure getEffectiveTimeSignature] getMeasureDuration], (float)3.0, @"Previous measure affected by redoing time signature change.");
+	STAssertEquals([[secondMeasure getEffectiveTimeSignature] getMeasureDuration], (float)2.25, @"Failed to redo time signature change.");
+	STAssertEquals([[thirdMeasure getEffectiveTimeSignature] getMeasureDuration], (float)2.25, @"Following measure not affected by redoing time signature change.");
 	[self tearDownUndoTest];
 }
 - (void) testUndoRedoSetTimeSigPreservesNotesWhenShrinking{
@@ -200,7 +196,7 @@ extern int enableMIDI;
 	[song timeSigChangedAtIndex:0 top:6 bottom:8];
 	[mgr undo];
 	[mgr undo];
-	STAssertEquals([[staff getLastMeasure] getTotalDuration], effDuration(4, NO), @"Notes not preserved after undoing time signature change.");
+	STAssertEquals([[staff getLastMeasure] getTotalDuration], (float)0.75, @"Notes not preserved after undoing time signature change.");
 }
 - (void) testUndoRedoSetTimeSigPreservesNotesWhenGrowing{
 	[self setUpUndoTest];

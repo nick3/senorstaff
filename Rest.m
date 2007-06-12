@@ -20,11 +20,7 @@
 	return self;
 }
 
-- (void)transposeBy:(int)numLines{
-	//do nothing
-}
-
-- (void)transposeBy:(int)numHalfSteps oldSignature:(KeySignature *)oldSig newSignature:(KeySignature *)newSig{
+- (void)transposeBy:(int)transposeAmount{
 	//do nothing
 }
 
@@ -33,24 +29,12 @@
 }
 
 - (float)addToMIDITrack:(MusicTrack *)musicTrack atPosition:(float)pos withKeySignature:(KeySignature *)keySig 
-			accidentals:(NSMutableDictionary *)accidentals transpose:(int)transposition onChannel:(int)channel{
+			accidentals:(NSMutableDictionary *)accidentals onChannel:(int)channel{
 	return 4.0 * [self getEffectiveDuration] / 3;
 }
 
 - (BOOL)canBeInChord{
 	return NO;
-}
-
-- (void)addNoteToLilypondString:(NSMutableString *)string accidentals:(NSMutableDictionary *)accidentals{
-	[string appendString:@"r"];
-	[self addDurationToLilypondString:string];
-	[string appendString:@" "];
-}
-
-- (void)addToMusicXMLString:(NSMutableString *)string accidentals:(NSMutableDictionary *)accidentals{
-	[string appendString:@"<note>/n<rest/>\n"];
-	[self addDurationToMusicXMLString:string];
-	[string appendString:@"</note>\n"];
 }
 
 - (void)encodeWithCoder:(NSCoder *)coder{

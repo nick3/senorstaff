@@ -23,24 +23,10 @@
 #import "KeySigTarget.h"
 #import "TimeSigTarget.h"
 #import "Clef.h"
-#import "Song.h"
-#import "NoteBase.h"
-#import "Note.h"
-#import "CAMIDIEndpointMenu2.h"
-#import "NSArray+SenorStaff.h"
 
 @class Chord;
 
-static NoteBase *lastFeedbackNoteDrawn = nil;
-static float lastFeedbackPosition = -1;
-
 @implementation MeasureDraw
-
-+(void)initialize{
-	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-	NSDictionary *appDefaults = [NSDictionary dictionaryWithObject:@"YES" forKey:@"SSTFPlayFeedback"];
-    [defaults registerDefaults:appDefaults];
-}
 
 +(void)drawClef:(Clef *)clef inMeasure:(Measure *)measure isTarget:(BOOL)isTarget{
 	Class viewClass = (clef == nil) ? [ClefDraw class] : [clef getViewClass];
@@ -63,7 +49,7 @@ static float lastFeedbackPosition = -1;
 		if([selection respondsToSelector:@selector(containsAll:)] && [selection containsAll:group]){
 			[[NSColor redColor] set];
 		}
-		NoteBase *firstNote = [group objectAtIndex:0], *lastNote = [group lastObject];
+		Note *firstNote = [group objectAtIndex:0], *lastNote = [group lastObject];
 		BOOL stemUpwards = [[firstNote getViewClass] isStemUpwards:firstNote inMeasure:measure];
 		float firstStemX = [[firstNote getViewClass] stemXForNote:firstNote inMeasure:measure upwards:stemUpwards];
 		float firstStemY = stemUpwards ? [[firstNote getViewClass] topOf:firstNote inMeasure:measure] :
@@ -77,7 +63,7 @@ static float lastFeedbackPosition = -1;
 			float stem = stemUpwards ? [[note getViewClass] topOf:note inMeasure:measure] :
 				[[note getViewClass] bottomOf:note inMeasure:measure];
 			if((stemUpwards && stem < firstStemY && stem < lastStemY) ||
-			   (!stemUpwards && stem > firstStemY && stem > lastStemY)){
+			   (stem > firstStemY && stem > lastStemY)){
 				firstStemY = lastStemY = stem;
 			}
 		}
@@ -85,13 +71,13 @@ static float lastFeedbackPosition = -1;
 		NSPoint barEnd = NSMakePoint(lastStemX, lastStemY);
 		[NSBezierPath strokeLineFromPoint:barStart toPoint:barEnd];
 		notes = [group objectEnumerator];
-		NoteBase *prevNote = nil, *currNote = [notes nextObject], *nextNote = [notes nextObject];
+		Note *prevNote = nil, *currNote = [notes nextObject], *nextNote = [notes nextObject];
 		float prevStemX = 0, currStemX = [[firstNote getViewClass] stemXForNote:firstNote inMeasure:measure upwards:stemUpwards],
 			nextStemX = nextNote != nil ? [[nextNote getViewClass] stemXForNote:nextNote inMeasure:measure upwards:stemUpwards] : 0;
 		float prevStemY = 0, currStemY = firstStemY + (lastStemY - firstStemY) * (currStemX - firstStemX) / (lastStemX - firstStemX),
 			nextStemY = firstStemY + (lastStemY - firstStemY) * (nextStemX - firstStemX) / (lastStemX - firstStemX);
 		while(currNote != nil){
-			NSPoint stemStart = NSMakePoint(currStemX, [[currNote getViewClass] stemStartYForNote:currNote inMeasure:measure upwards:stemUpwards]);
+			NSPoint stemStart = NSMakePoint(currStemX, [[currNote getViewClass] stemStartYForNote:currNote inMeasure:measure]);
 			NSPoint stemEnd = NSMakePoint(currStemX, currStemY);
 			[NSGraphicsContext saveGraphicsState];
 			if(target == currNote || selection == currNote || 
@@ -104,7 +90,7 @@ static float lastFeedbackPosition = -1;
 				if([nextNote getDuration] >= 16){
 					[NSBezierPath strokeLineFromPoint:NSMakePoint(currStemX, currStemY + (stemUpwards ? 4 : -4))
 											  toPoint:NSMakePoint(nextStemX, nextStemY + (stemUpwards ? 4 : -4))];
-				} else{
+				} else if(prevNote != nil && [prevNote getDuration] < 16){
 					float partialStemX, partialStemY;
 					if(prevNote == nil){
 						partialStemY = currStemY + (nextStemY - currStemY) * 8 / (nextStemX - currStemX);
@@ -120,7 +106,7 @@ static float lastFeedbackPosition = -1;
 					if([nextNote getDuration] >= 32){
 						[NSBezierPath strokeLineFromPoint:NSMakePoint(currStemX, currStemY + (stemUpwards ? 8 : -8))
 												  toPoint:NSMakePoint(nextStemX, nextStemY + (stemUpwards ? 8 : -8))];
-					} else{
+					} else if(prevNote != nil && [prevNote getDuration] < 32){
 						float partialStemX, partialStemY;
 						if(prevNote == nil){
 							partialStemY = currStemY + (nextStemY - currStemY) * 8 / (nextStemX - currStemX);
@@ -149,17 +135,6 @@ static float lastFeedbackPosition = -1;
 	[NSBezierPath setDefaultLineWidth:1.0];
 }
 
-+(void)playFeedbackNote:(NoteBase *)feedbackNote inMeasure:(Measure *)measure atIndex:(float)index withExistingNote:(NoteBase *)note{
-	if([[NSUserDefaults standardUserDefaults] boolForKey:@"SSTFPlayFeedback"] &&
-		(![feedbackNote isEqualTo:lastFeedbackNoteDrawn] || lastFeedbackPosition != index)){
-		[lastFeedbackNoteDrawn release];
-		lastFeedbackPosition = index;
-		lastFeedbackNoteDrawn = [feedbackNote retain];
-		[[[measure getStaff] getSong] playFeedbackNote:feedbackNote atPosition:index inMeasure:measure withExistingNote:note
-											toEndpoint:[[[[NSApp mainMenu] itemWithTag:1] submenu] selectedEndpoint]];
-	}
-}
-
 +(void)drawFeedbackNoteInMeasure:(Measure *)measure targetLocation:(NSPoint)location mode:(NSDictionary *)mode{
 	[[NSColor blueColor] set];
 	location.x -= [MeasureController xOf:measure];
@@ -179,12 +154,10 @@ static float lastFeedbackPosition = -1;
 				BOOL stemUpwards = [[note getViewClass] isStemUpwards:note inMeasure:measure];
 				[[feedbackNote getViewClass] draw:feedbackNote inMeasure:measure atIndex:index isTarget:NO isOffset:NO
 							  isInChordWithOffset:NO stemUpwards:stemUpwards drawStem:YES drawTriplet:YES];
-				[self playFeedbackNote:feedbackNote inMeasure:measure atIndex:index withExistingNote:note];
 				return;
 			}
 		}
-		[[feedbackNote getViewClass] draw:feedbackNote inMeasure:measure atIndex:index target:nil selection:nil];
-		[self playFeedbackNote:feedbackNote inMeasure:measure atIndex:index withExistingNote:nil];
+		[[feedbackNote getViewClass] draw:feedbackNote inMeasure:measure atIndex:index target:nil selection:nil];		
 	}
 	[[NSColor blackColor] set];
 }

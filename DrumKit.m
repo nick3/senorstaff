@@ -7,59 +7,42 @@
 //
 
 #import "DrumKit.h"
-#import "Drum.h"
-#import <Chomp/Chomp.h>
 
 static DrumKit *standardKit;
-static NSArray *allDrums;
 
 @implementation DrumKit
 
-- (id) initWithDrums:(NSArray *)_drums{
+- (id) initWithPitches:(NSArray *)_pitches octaves:(NSArray *)_octaves names:(NSArray *)_names{
 	if(self = [super init]){
-		drums = [[NSMutableArray arrayWithArray:_drums] retain];
+		pitches = [[NSMutableArray arrayWithArray:_pitches] retain];
+		octaves = [[NSMutableArray arrayWithArray:_octaves] retain];
+		names = [[NSMutableArray arrayWithArray:_names] retain];
 	}
 	return self;	
 }
 
-- (void)sendChangeNotification{
-	[[NSNotificationCenter defaultCenter] postNotification:[NSNotification notificationWithName:@"modelChanged" object:self]];
-}
-
 - (BOOL)positionIsValid:(int)position{
-	return (position >= 0) && (position < [drums count]);
+	return (position >= 0) && (position < [pitches count]);
 }
 
 - (int)getPositionForPitch:(int)pitch withOctave:(int)octave{
 	int i;
-	for(i = 0; i < [drums count]; i++){
-		if([[drums objectAtIndex:([drums count] - i - 1)] pitch] == pitch &&
-		   [[drums objectAtIndex:([drums count] - i - 1)] octave] == octave){
+	for(i = 0; i < [pitches count]; i++){
+		if([[pitches objectAtIndex:i] intValue] == pitch &&
+		   [[octaves objectAtIndex:i] intValue] == octave){
 			return i;
 		}
 	}
-//	NSAssert(NO, @"getPositionForPitch called on DrumKit for invalid pitch and octave");
+	NSAssert(NO, @"getPositionForPitch called on DrumKit for invalid pitch and octave");
 	return 0;
 }
 
 - (int)getPitchForPosition:(int)position{
-	if(position < 0){
-		position == 0;
-	}
-	if(position >= [drums count]){
-		position = [drums count] - 1;
-	}
-	return [[drums objectAtIndex:([drums count] - position - 1)] pitch];
+	return [[pitches objectAtIndex:position] intValue];
 }
 
 - (int)getOctaveForPosition:(int)position{
-	if(position < 0){
-		position == 0;
-	}
-	if(position >= [drums count]){
-		position = [drums count] - 1;
-	}
-	return [[drums objectAtIndex:([drums count] - position - 1)] octave];
+	return [[octaves objectAtIndex:position] intValue];
 }
 
 - (int)getTranspositionFrom:(Clef *)clef{
@@ -67,141 +50,61 @@ static NSArray *allDrums;
 }
 
 - (NSString *)nameAt:(int)position{
-	return [[drums objectAtIndex:([drums count] - position - 1)] shortName];
-}
-
-- (NSString *)lilypondStringForPitch:(int)pitch octave:(int)octave{
-	NSEnumerator *drumsEnum = [drums objectEnumerator];
-	id drum;
-	while(drum = [drumsEnum nextObject]){
-		if([drum pitch] == pitch && [drum octave] == octave){
-			return [drum lilypondString];
-		}
-	}
-}
-
-- (NSString *)musicXMLStringForPitch:(int)pitch octave:(int)octave{
-	NSEnumerator *drumsEnum = [drums objectEnumerator];
-	id drum;
-	while(drum = [drumsEnum nextObject]){
-		if([drum pitch] == pitch && [drum octave] == octave){
-			return [drum musicXMLString];
-		}
-	}
-}
-
-- (void)appendMusicXMLHeaderToString:(NSMutableString *)string{
-	[[drums do] appendMusicXMLHeaderToString:string];
-}
-
-- (NSMutableArray *)drums{
-	return drums;
-}
-
-- (void)setDrums:(NSMutableArray *)_drums{
-	[[[staff undoManager] prepareWithInvocationTarget:self] setDrums:drums];
-	[[staff undoManager] setActionName:@"editing drum kit"];
-	if(![_drums isEqualToArray:drums]){
-		[drums release];
-		drums = [_drums retain];
-		[self sendChangeNotification];
-	}
-}
-
-- (Staff *)staff{
-	return staff;
-}
-- (void)setStaff:(Staff *)_staff{
-	staff = _staff;
-}
-
-- (NSWindow *)editDialog{
-	return editDialog;
-}
-
-- (IBAction)closeDialog:(id)sender{
-	[NSApp endSheet:editDialog];
-	[[staff undoManager] endUndoGrouping];
-}
-
-- (IBAction)cancelDialog:(id)sender{
-	[self closeDialog:sender];
-	[[staff undoManager] undo];
-}
-
-- (void)endEditDialog{
-	[editDialog orderOut:self];
-	[self sendChangeNotification];
-}
-
-- (IBAction)import:(id)sender{
-	NSOpenPanel *open = [NSOpenPanel openPanel];
-	[open setTitle:@"Import Drum Kit"];
-	[open setAllowsMultipleSelection:NO];
-	if([open runModalForTypes:[NSArray arrayWithObject:@"ssd"]] == NSOKButton){
-		NSString *file = [[open filenames] objectAtIndex:0];
-		[self setDrums:[NSKeyedUnarchiver unarchiveObjectWithFile:file]];
-	}
-}
-- (IBAction)export:(id)sender{
-	NSSavePanel *save = [NSSavePanel savePanel];
-	[save setTitle:@"Export Drum Kit"];
-	[save setRequiredFileType:@"ssd"];
-	if([save runModal] == NSOKButton){
-		NSString *file = [save filename];
-		[NSKeyedArchiver archiveRootObject:drums toFile:file];
-	}
+	return [names objectAtIndex:position];
 }
 
 + (DrumKit *)standardKit{
 	if(standardKit == nil){
-		standardKit = [[DrumKit alloc] initWithDrums:[NSKeyedUnarchiver unarchiveObjectWithFile:[[NSBundle mainBundle] pathForResource:@"stdDrums" ofType:@"dat"]]];
+		standardKit = [[DrumKit alloc] initWithPitches:[NSArray arrayWithObjects:[NSNumber numberWithInt:0],
+																				 [NSNumber numberWithInt:2],
+																				 [NSNumber numberWithInt:7],
+																				 [NSNumber numberWithInt:11],
+																				 [NSNumber numberWithInt:2],
+																				 [NSNumber numberWithInt:6],
+																				 [NSNumber numberWithInt:3],
+																				 [NSNumber numberWithInt:1], nil]
+											   octaves:[NSArray arrayWithObjects:[NSNumber numberWithInt:3],
+																				 [NSNumber numberWithInt:3],
+																				 [NSNumber numberWithInt:3],
+																				 [NSNumber numberWithInt:3],
+																				 [NSNumber numberWithInt:4],
+																				 [NSNumber numberWithInt:3],
+																				 [NSNumber numberWithInt:4],
+																				 [NSNumber numberWithInt:4], nil]
+												 names:[NSArray arrayWithObjects:@"Kick",
+																				 @"Snare",
+																				 @"Low Tom",
+																				 @"Med Tom",
+																				 @"Hi Tom",
+																				 @"Hi Hat",
+																				 @"Ride",
+																				 @"Crash", nil]];
 	}
 	return standardKit;
 }
 
-- (NSArray *)allDrums{
-	if(allDrums == nil){
-		allDrums = [NSKeyedUnarchiver unarchiveObjectWithFile:[[NSBundle mainBundle] pathForResource:@"allDrums" ofType:@"dat"]];
-	}
-	return allDrums;
-}
-
-- (id)copyWithZone:(NSZone *)zone{
-	return [[DrumKit allocWithZone:zone] initWithDrums:[NSArray arrayWithArray:drums]];
-}
-
 - (void)encodeWithCoder:(NSCoder *)coder{
-	[coder encodeObject:drums forKey:@"drums"];
+	[coder encodeObject:pitches forKey:@"pitches"];
+	[coder encodeObject:octaves forKey:@"octaves"];
+	[coder encodeObject:names forKey:@"names"];
 }
 
 - (id)initWithCoder:(NSCoder *)coder{
 	if(self = [super init]){
-		drums = [coder decodeObjectForKey:@"drums"];
-		// support old-style
-		NSArray *pitches = [coder decodeObjectForKey:@"pitches"];
-		NSArray *octaves = [coder decodeObjectForKey:@"octaves"];
-		NSArray *names = [coder decodeObjectForKey:@"names"];
-		if(pitches != nil){
-			[drums release];
-			drums = [[NSMutableArray array] retain];
-			NSEnumerator *pitchEnum = [pitches objectEnumerator];
-			NSEnumerator *octaveEnum = [octaves objectEnumerator];
-			NSEnumerator *nameEnum = [names objectEnumerator];
-			id pitch, octave, name;
-			while(pitch = [pitchEnum nextObject]){
-				octave = [octaveEnum nextObject];
-				name = [nameEnum nextObject];
-				[drums addObject:[[[Drum alloc] initWithPitch:[pitch intValue] octave:[octave intValue] name:name shortName:name] autorelease]];
-			}
-		}
+		pitches = [coder decodeObjectForKey:@"pitches"];
+		octaves = [coder decodeObjectForKey:@"octaves"];
+		names = [coder decodeObjectForKey:@"names"];
 	}
 	return self;
 }
 
 - (void) dealloc {
-	[drums release];
-	drums = nil;
+	[pitches release];
+	[octaves release];
+	[names release];
+	pitches = nil;
+	octaves = nil;
+	names = nil;
 	[super dealloc];
 }
 

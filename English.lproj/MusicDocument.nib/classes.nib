@@ -9,19 +9,19 @@
                 changeDotted = id; 
                 changeDuration = id; 
                 changeTriplet = id; 
-                setZoom = id; 
-                toggleKeyHelpVisible = id; 
             }; 
             CLASS = MEWindowController; 
             LANGUAGE = ObjC; 
             OUTLETS = {
                 accidentalView = NSView; 
+                auxNoteControlView = NSView; 
                 dotted = NSButton; 
                 duration = NSPopUpButton; 
                 durationView = NSView; 
                 flat = NSButton; 
                 horizontalRuler = NSView; 
                 horizontalRulerScroll = NSScrollView; 
+                mode = NSMatrix; 
                 natural = NSButton; 
                 scrollView = NSScrollView; 
                 sharp = NSButton; 
@@ -40,24 +40,23 @@
             OUTLETS = {owner = NSView; }; 
             SUPERCLASS = NSScrollView; 
         }, 
-        {CLASS = OpaqueBox; LANGUAGE = ObjC; SUPERCLASS = NSBox; }, 
         {
             CLASS = ScoreView; 
             LANGUAGE = ObjC; 
-            OUTLETS = {clickTarget = id; helpBox = NSBox; mouseOver = id; selection = id; }; 
+            OUTLETS = {
+                clefFeedback = id; 
+                keySigFeedback = id; 
+                mouseOver = id; 
+                timeSigFeedback = id; 
+            }; 
             SUPERCLASS = NSView; 
         }, 
         {CLASS = Song; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {CLASS = StaffVerticalRuler; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
         {
-            ACTIONS = {setZoom = id; }; 
-            CLASS = StaffVerticalRuler; 
-            LANGUAGE = ObjC; 
-            SUPERCLASS = NSView; 
-        }, 
-        {
-            ACTIONS = {setZoom = id; }; 
             CLASS = StaffVerticalRulerComponent; 
             LANGUAGE = ObjC; 
+            OUTLETS = {staff = Staff; }; 
             SUPERCLASS = NSView; 
         }, 
         {CLASS = StaffView; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 

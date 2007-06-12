@@ -13,12 +13,9 @@
 #import "TimeSignature.h"
 #import "CompoundTimeSig.h"
 
-extern int enableMIDI;
-
 @implementation StaffTest
 
 - (void) setUp{
-	enableMIDI = 0;
 	staff = [[Staff alloc] initWithSong:nil];
 }
 
@@ -195,19 +192,6 @@ extern int enableMIDI;
 	[note release];
 }
 
-- (void) testGetMeasureContainingNoteInChord{
-	Measure *secondMeasure = [staff addMeasure];
-	[staff addMeasure];
-	Note *note = [[Note alloc] init];
-	Note *secondNote = [[Note alloc] init];
-	Chord *chord = [[Chord alloc] initWithStaff:nil withNotes:[NSMutableArray arrayWithObjects:note, secondNote, nil]];
-	[secondMeasure setNotes:[NSMutableArray arrayWithObject:chord]];
-	STAssertEqualObjects([staff getMeasureContainingNote:note], secondMeasure, @"Wrong measure returned.");
-	[note release];
-	[secondNote release];
-	[chord release];
-}
-
 - (void) testCleanEmptyMeasuresCleansEmptyMeasureOffEnd{
 	Measure *secondMeasure = [staff addMeasure];
 	[staff addMeasure];
@@ -284,41 +268,6 @@ extern int enableMIDI;
 	[firstNote release];
 	[secondNote release];
 	[thirdNote release];
-}
-- (void) testFindPreviousNoteMatchingTargetNoteInChord{
-	Measure *measure = [staff getLastMeasure];
-	Note *firstNote = [[Note alloc] initWithPitch:0 octave:0 duration:1 dotted:NO accidental:NO_ACC onStaff:staff];
-	Note *secondNote = [[Note alloc] initWithPitch:0 octave:0 duration:1 dotted:NO accidental:NO_ACC onStaff:staff];
-	Chord *chord = [[Chord alloc] initWithStaff:staff withNotes:[NSMutableArray arrayWithObject:secondNote]];
-	[measure setNotes:[NSMutableArray arrayWithObjects:firstNote, chord, nil]];
-	STAssertEqualObjects([staff findPreviousNoteMatching:secondNote inMeasure:measure], firstNote, @"Wrong note returned.");
-	[firstNote release];
-	[secondNote release];
-	[chord release];
-}
-- (void) testFindPreviousNoteMatchingPreviousNoteInChord{
-	Measure *measure = [staff getLastMeasure];
-	Note *firstNote = [[Note alloc] initWithPitch:0 octave:0 duration:1 dotted:NO accidental:NO_ACC onStaff:staff];
-	Chord *chord = [[Chord alloc] initWithStaff:staff withNotes:[NSMutableArray arrayWithObject:firstNote]];
-	Note *secondNote = [[Note alloc] initWithPitch:0 octave:0 duration:1 dotted:NO accidental:NO_ACC onStaff:staff];
-	[measure setNotes:[NSMutableArray arrayWithObjects:chord, secondNote, nil]];
-	STAssertEqualObjects([staff findPreviousNoteMatching:secondNote inMeasure:measure], firstNote, @"Wrong note returned.");
-	[firstNote release];
-	[secondNote release];
-	[chord release];
-}
-- (void) testFindPreviousNoteMatchingBothNotesInChord{
-	Measure *measure = [staff getLastMeasure];
-	Note *firstNote = [[Note alloc] initWithPitch:0 octave:0 duration:1 dotted:NO accidental:NO_ACC onStaff:staff];
-	Chord *chord = [[Chord alloc] initWithStaff:staff withNotes:[NSMutableArray arrayWithObject:firstNote]];
-	Note *secondNote = [[Note alloc] initWithPitch:0 octave:0 duration:1 dotted:NO accidental:NO_ACC onStaff:staff];
-	Chord *secondChord = [[Chord alloc] initWithStaff:staff withNotes:[NSMutableArray arrayWithObject:secondNote]];
-	[measure setNotes:[NSMutableArray arrayWithObjects:chord, secondChord, nil]];
-	STAssertEqualObjects([staff findPreviousNoteMatching:secondNote inMeasure:measure], firstNote, @"Wrong note returned.");
-	[firstNote release];
-	[secondNote release];
-	[chord release];
-	[secondChord release];
 }
 
 - (void) testNotesBetweenLeftToRightWithinMeasure{
@@ -552,28 +501,6 @@ extern int enableMIDI;
 	STAssertEquals([thirdNote getOctave], postOctave, @"Note in following measure not re-transposed after redoing clef toggle - wrong octave.");
 	[firstNote release];
 	[secondNote release];
-	[self tearDownUndoTest];
-}
-
-- (void)testUndoRedoSetChannel{
-	[self setUpUndoTest];
-	int startChannel = [staff channel];
-	[staff setChannel:10];
-	[mgr undo];
-	STAssertEquals([staff channel], startChannel, @"Failed to undo setting staff channel.");
-	[mgr redo];
-	STAssertEquals([staff channel], 10, @"Failed to redo setting staff channel.");
-	[self tearDownUndoTest];
-}
-
-- (void)testUndoRedoSetTransposition{
-	[self setUpUndoTest];
-	int startTransp = [staff transposition];
-	[staff setTransposition:-3];
-	[mgr undo];
-	STAssertEquals([staff transposition], startTransp, @"Failed to undo setting staff transposition.");
-	[mgr redo];
-	STAssertEquals([staff transposition], -3, @"Failed to redo setting staff transposition.");
 	[self tearDownUndoTest];
 }
 

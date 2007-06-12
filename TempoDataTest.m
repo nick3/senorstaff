@@ -9,14 +9,11 @@
 #import "TempoDataTest.h"
 #import "TempoData.h"
 
-extern int enableMIDI;
-
 @implementation TempoDataTest
 
 // ----- undo/redo tests -----
 
 - (void)setUpUndoTest{
-	enableMIDI = 0;
 	doc = [[MusicDocument alloc] init];
 	mgr = [[NSUndoManager alloc] init];
 	[doc setUndoManager:mgr];

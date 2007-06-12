@@ -8,7 +8,6 @@
 
 #import "NoteBase.h"
 #import "NoteController.h"
-#import "Measure.h"
 
 @implementation NoteBase
 
@@ -23,11 +22,7 @@
 	duration = _duration;
 }
 - (void)setDotted:(BOOL)_dotted{
-	[[[self undoManager] prepareWithInvocationTarget:self] setDotted:dotted];
 	dotted = _dotted;
-	Measure *measure = [staff getMeasureContainingNote:self];
-	[measure refreshNotes:self];
-	[measure grabNotesFromNextMeasure];
 }
 
 - (Staff *)getStaff{
@@ -47,13 +42,8 @@
 }
 
 - (float)getEffectiveDuration{
-	if([self getDuration] == 0) {
-		return 0;
-	}
 	float effDuration = 3.0 / (float)[self getDuration];
-	if([self getDotted]){
-		 effDuration *= 1.5;
-	}
+	if([self getDotted]) effDuration *= 1.5;
 	return effDuration;
 }
 
@@ -110,31 +100,12 @@
 
 - (float)addToMIDITrack:(MusicTrack *)musicTrack atPosition:(float)pos
 	   withKeySignature:(KeySignature *)sig accidentals:(NSMutableDictionary *)accidentals
-			  transpose:(int)transposition onChannel:(int)channel{
+			  onChannel:(int)channel{
 	[self doesNotRecognizeSelector:_cmd];
 	return 0;
 }
 
-- (void)addToLilypondString:(NSMutableString *)string accidentals:(NSMutableDictionary *)accidentals{
-	NSArray *triplet = [self getContainingTriplet];
-	if([triplet objectAtIndex:0] == self){
-		[string appendString:@"\\times 2/3 {"];
-	}
-	[self addNoteToLilypondString:string accidentals:accidentals];
-	if([triplet lastObject] == self){
-		[string appendString:@"}"];
-	}
-}
-
-- (void)addNoteToLilypondString:(NSMutableString *)string accidentals:(NSMutableDictionary *)accidentals{
-	[self doesNotRecognizeSelector:_cmd];
-}
-
-- (void)transposeBy:(int)numLines{
-	[self doesNotRecognizeSelector:_cmd];
-}
-
-- (void)transposeBy:(int)numHalfSteps oldSignature:(KeySignature *)oldSig newSignature:(KeySignature *)newSig{
+- (void)transposeBy:(int)transposeAmount{
 	[self doesNotRecognizeSelector:_cmd];
 }
 
@@ -158,77 +129,59 @@
 	return remainingNotes;
 }
 
-- (BOOL)tryToFill:(float)maxDuration{
+- (void)tryToFill:(float)maxDuration{
 	if(maxDuration >= 4.5){
 		duration = 1;
 		dotted = YES;
-		return YES;
 	} else if(maxDuration >= 3){
 		duration = 1;
 		dotted = NO;
-		return YES;
 	} else if(maxDuration >= 2.25){
 		duration = 2;
 		dotted = YES;
-		return YES;
 	} else if(maxDuration >= 1.5){
 		duration = 2;
 		dotted = NO;
-		return YES;
 	} else if(maxDuration >= 1.0){
 		duration = 3;
 		dotted = NO;
-		return YES;
 	} else if(maxDuration >= 0.975){
 		duration = 4;
 		dotted = YES;
-		return YES;
 	} else if(maxDuration >= 0.75){
 		duration = 4;
 		dotted = NO;
-		return YES;
 	} else if(maxDuration >= 0.5){
 		duration = 6;
 		dotted = NO;
-		return YES;
 	} else if(maxDuration >= 0.5625){
 		duration = 8;
 		dotted = YES;
-		return YES;
 	} else if(maxDuration >= 0.375){
 		duration = 8;
 		dotted = NO;
-		return YES;
 	} else if(maxDuration >= 0.25){
 		duration = 12;
 		dotted = NO;
-		return YES;
 	} else if(maxDuration >= 0.28125){
 		duration = 16;
 		dotted = YES;
-		return YES;
 	} else if(maxDuration >= 0.1875){
 		duration = 16;
 		dotted = NO;
-		return YES;
 	} else if(maxDuration >= 0.125){
 		duration = 24;
 		dotted = NO;
-		return YES;
 	} else if(maxDuration >= 0.140625){
 		duration = 32;
 		dotted = YES;
-		return YES;
 	} else if(maxDuration >= 0.09375){
 		duration = 32;
 		dotted = NO;
-		return YES;
 	} else if(maxDuration >= 0.0625){
 		duration = 48;
 		dotted = NO;
-		return YES;
 	}
-	return NO;
 }
 
 // -- tie methods - do nothing by default
@@ -247,35 +200,6 @@
 
 - (NoteBase *)getTieFrom{
 	return nil;
-}
-
-- (void)addDurationToLilypondString:(NSMutableString *)string{
-	int duration = [self getDuration];
-	if(duration % 3 == 0) {
-		duration = duration * 2 / 3;
-	}
-	[string appendFormat:@"%d", duration];
-	if([self getDotted]){
-		[string appendString:@"."];
-	}
-	if([self getTieTo] != nil){
-		[string appendString:@"~"];
-	}
-}
-
-- (void)addToMusicXMLString:(NSMutableString *)string accidentals:(NSMutableDictionary *)accidentals{
-	[self doesNotRecognizeSelector:_cmd];
-}
-
-- (void)addDurationToMusicXMLString:(NSMutableString *)string{
-	int duration = 48 / [self getDuration];
-	if([self getDotted]){
-		duration += duration / 2;
-	}
-	[string appendFormat:@"<duration>%d</duration>\n", duration];
-	if([self isTriplet]){
-		[string appendString:@"<time-modification>\n<actual-notes>3</actual-notes>\n<normal-notes>2</normal-notes>\n</time-modification>\n"];
-	}
 }
 
 - (Class)getViewClass{

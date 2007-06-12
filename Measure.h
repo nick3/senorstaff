@@ -19,6 +19,7 @@
 @interface Measure : NSObject <NSCoding> {
 	Staff *staff;
 	Clef *clef;
+	DrumKit *drumKit;
 	KeySignature *keySig;
 	NSMutableArray *notes;
 	NSViewAnimation *anim;
@@ -26,7 +27,6 @@
 	IBOutlet NSView *keySigPanel;
 	IBOutlet NSPopUpButton *keySigLetter;
 	IBOutlet NSPopUpButton *keySigMajMin;
-	IBOutlet NSButton *keySigTranspose;
 	
 	IBOutlet NSView *timeSigPanel;
 	IBOutlet NSTextField *timeSigTopText;
@@ -37,8 +37,6 @@
 	IBOutlet NSPopUpButton *timeSigSecondBottom;
 	IBOutlet NSButton *timeSigInnerClose;
 	IBOutlet NSButton *timeSigExpand;
-	
-	NSArray *cachedNoteGroups;
 }
 
 - (id)initWithStaff:(Staff *)_staff;
@@ -54,7 +52,6 @@
 - (NoteBase *)addNotes:(NSArray *)_notes atIndex:(float)index;
 - (NoteBase *)addNotesInternal:(NSArray *)_notes atIndex:(float)index consolidate:(BOOL)consolidate;
 - (void)removeNoteAtIndex:(float)x temporary:(BOOL)temp;
-- (void)removeNote:(NoteBase *)note temporary:(BOOL)temp;
 
 - (void)addNote:(NoteBase *)newNote toChordAtIndex:(float)index;
 - (void)removeNote:(NoteBase *)note fromChordAtIndex:(float)index;
@@ -107,8 +104,7 @@
 - (NoteBase *)getClosestNoteBefore:(float)targetDuration;
 - (NoteBase *)getClosestNoteAfter:(float)targetDuration;
 
-- (void)transposeBy:(int)numLines;
-- (void)transposeBy:(int)numHalfSteps oldSignature:(KeySignature *)oldSig newSignature:(KeySignature *)newSig;
+- (void)transposeBy:(int)tranposeAmount;
 
 - (IBAction)keySigChanged:(id)sender;
 - (IBAction)keySigClose:(id)sender;
@@ -123,12 +119,8 @@
 
 - (void)cleanPanels;
 
-- (NSDictionary *)getAccidentalsAtPosition:(float)pos;
-
 - (float)addToMIDITrack:(MusicTrack *)musicTrack atPosition:(float)pos
-			  transpose:(int)transposition onChannel:(int)channel notesToPlay:(id)selection;
-- (void)addToLilypondString:(NSMutableString *)string;
-- (void)addToMusicXMLString:(NSMutableString *)string;
+	onChannel:(int)channel;
 
 - (Class)getViewClass;
 - (Class)getControllerClass;

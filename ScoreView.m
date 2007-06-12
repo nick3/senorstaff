@@ -18,8 +18,6 @@
 #import "NoteDraw.h"
 #import "Repeat.h"
 
-#import "NSView+ScaleUtilities.h"
-
 @implementation ScoreView
 
 - (void)setController:(MEWindowController *)_controller{
@@ -73,8 +71,6 @@
 	while(subview = [subviews nextObject]){
 		bounds = NSUnionRect(bounds, [subview frame]);
 	}
-	bounds.size.width *= [self scale].width;
-	bounds.size.height *= [self scale].height;
 	return bounds;
 }
 
@@ -103,26 +99,14 @@
 	}
 }
 
-- (void) updateHelpBoxPosition{
-	NSRect visible = [self visibleRect];
-	NSRect helpBoxFrame = [helpBox frame];
-	[helpBox setFrameOrigin:NSMakePoint((int)(visible.origin.x + visible.size.width - helpBoxFrame.size.width),
-										(int)(visible.origin.y + visible.size.height - helpBoxFrame.size.height))];
-}
-
 - (void) awakeFromNib{
 	[[self window] setAcceptsMouseMovedEvents:true];
 	[self loadLocalFonts];
-	[helpBox retain];
-	[helpBox removeFromSuperviewWithoutNeedingDisplay];
-	[self addSubview:helpBox];
-	[self updateHelpBoxPosition];
-	[helpBox release];
 }
 
 - (void)drawPlayerPosition {
 	double playerPosition = [song getPlayerPosition];
-	if(playerPosition >= 0 && playerPosition <= [song getPlayerEnd] - 5){
+	if(playerPosition >= 0){
 		float maxX = 0, minX = MAXFLOAT;
 		NSArray *playingNotes = [ScoreController notesAtBeats:playerPosition inSong:song];
 		NSMutableArray *playingMeasures = [NSMutableArray arrayWithCapacity:[playingNotes count]];
@@ -211,14 +195,12 @@
 
 - (void)drawRect:(NSRect)rect {
 	[NoteDraw resetAccidentals];
-	[MeasureController clearCaches];
 	NSEnumerator *staffs = [[song staffs] objectEnumerator];
 	id staff;
 	while(staff = [staffs nextObject]){
 		[[staff getViewClass] draw:staff inView:self target:mouseOver targetLocation:mouseLocation selection:selection mode:[controller getMode]];
 	}
 	[self drawPlayerPosition];
-	[self updateHelpBoxPosition];
 }
 
 - (void)showKeySigPanelFor:(Measure *)measure{
@@ -258,13 +240,8 @@
 
 - (void)updateFeedback:(NSEvent *)event{
 	[self setFrameSize:[self calculateBounds].size];
-	if([self mouse:mouseLocation inRect:[self bounds]]){
+	if([self mouse:mouseLocation inRect:[self frame]]){
 		mouseOver = [controller targetAt:mouseLocation withEvent:event];
-		if([[mouseOver getControllerClass] respondsToSelector:@selector(getCommandListFor:at:mode:)]){
-			[controller setKeyHelp:[@"Available commands:\n" stringByAppendingString:[[mouseOver getControllerClass] getCommandListFor:mouseOver 
-																																	at:mouseLocation
-																																  mode:[controller getMode]]]];
-		}
 	} else {
 		mouseOver = nil;
 	}

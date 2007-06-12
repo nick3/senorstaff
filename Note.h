@@ -34,7 +34,6 @@ static int FLAT = -1;
 		   duration:(int)_duration dotted:(BOOL)_dotted accidental:(int)_accidental onStaff:(Staff *)staff;
 		
 - (int)getPitch;
-- (char)getPitchLetter;
 - (int)getOctave;
 - (int)getLastPitch;
 - (int)getLastOctave;
@@ -42,19 +41,12 @@ static int FLAT = -1;
 
 - (void)setOctave:(int)_octave finished:(BOOL)finished;
 - (void)setPitch:(int)_pitch finished:(BOOL)finished;
-- (void)setPitch:(int)_pitch octave:(int)_octave finished:(BOOL)finished;
 - (void)setAccidental:(int)_accidental;
 
 - (BOOL)pitchMatches:(Note *)note;
 - (BOOL)isHigherThan:(Note *)note;
 - (BOOL)isLowerThan:(Note *)note;
 
-- (NSPoint)closestNoteAtRank:(int)rank;
-+ (NSPoint)noteAtRank:(int)rank onClef:(Clef *)clef;
-
 - (void)collapseOnTo:(Note *)note;
-
-- (void)addPitchToLilypondString:(NSMutableString *)string accidentals:(NSMutableDictionary *)accidentals;
-- (void)addToMusicXMLString:(NSMutableString *)string accidentals:(NSMutableDictionary *)accidentals chord:(BOOL)chord;
 
 @end

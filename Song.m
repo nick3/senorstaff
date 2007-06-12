@@ -17,14 +17,11 @@
 
 #import "Chord.h"
 #import "Note.h"
-#import "NoteBase.h"
 #import "Repeat.h"
 
 #import "CompoundTimeSig.h"
 
-#import "MIDIUtil.h"
-
-int enableMIDI = 1;
+static MusicPlayer musicPlayer;
 
 @implementation Song
 
@@ -33,49 +30,11 @@ int enableMIDI = 1;
 		doc = _doc;
 		tempoData = [[NSMutableArray arrayWithObject:[[TempoData alloc] initWithTempo:120 withSong:self]] retain];
 		staffs = [[NSMutableArray arrayWithObject:[[Staff alloc] initWithSong:self]] retain];
-		[[staffs objectAtIndex:0] setName:@"Staff 1"];
 		timeSigs = [[NSMutableArray arrayWithObject:[TimeSignature timeSignatureWithTop:4 bottom:4]] retain];
 		repeats = [[NSMutableArray array] retain];
 		playerPosition = -1;
-		if(enableMIDI){
-			[self initMIDI];
-		}
 	}
 	return self;
-}
-
-- (id)initFromMIDI:(NSData *)data withDocument:(MusicDocument *)_doc{
-	if((self = [self initWithDocument:_doc])){
-		[MIDIUtil readSong:self fromMIDI:data];
-	}
-	return self;
-}
-
-- (void)initMIDI{
-	if (NewMusicPlayer(&musicPlayer) != noErr) {
-		[NSException raise:@"main" format:@"Cannot create music player."];
-	}
-	if (NewMusicSequence(&musicSequence) != noErr){
-		[NSException raise:@"main" format:@"Cannot create music sequence."];
-	}
-	if (MusicPlayerSetSequence(musicPlayer, musicSequence) != noErr) {
-		NSLog(@"Cannot set sequence for music player.");
-		return;
-	}
-	if (NewMusicPlayer(&feedbackPlayer) != noErr) {
-		[NSException raise:@"main" format:@"Cannot create music player."];
-	}
-	if (NewMusicSequence(&feedbackSequence) != noErr){
-		[NSException raise:@"main" format:@"Cannot create music sequence."];
-	}
-	if (MusicPlayerSetSequence(feedbackPlayer, feedbackSequence) != noErr) {
-		NSLog(@"Cannot set sequence for music player.");
-		return;
-	}
-	if (MusicSequenceNewTrack(feedbackSequence, &feedbackTrack) != noErr) {
-		[NSException raise:@"main" format:@"Cannot create music track."];
-	}
-	MusicPlayerPreroll(feedbackPlayer);
 }
 
 - (NSUndoManager *)undoManager{
@@ -88,13 +47,6 @@ int enableMIDI = 1;
 
 - (MusicDocument *)document{
 	return doc;
-}
-
-- (void)setDocument:(MusicDocument *)_document{
-	if(![doc isEqual:_document]){
-		[doc release];
-		doc = [_document retain];
-	}
 }
 
 - (NSMutableArray *)staffs{
@@ -124,7 +76,6 @@ int enableMIDI = 1;
 - (Staff *)addStaff{
 	[self prepUndo];
 	Staff *staff = [self doAddStaff];
-	[staff setName:[NSString stringWithFormat:@"Staff %d", [staffs count]]];
 	[self refreshTimeSigs];
 	[self refreshTempoData];
 	return staff;
@@ -246,15 +197,6 @@ int enableMIDI = 1;
 	return [[self getTimeSignatureAt:prevMeasureIndex] getTimeSignatureAfterMeasures:(measureIndex - prevMeasureIndex)];
 }
 
-- (BOOL)isCompoundTimeSignatureAt:(int)measureIndex{
-	int prevMeasureIndex = measureIndex;
-	while([[self getTimeSignatureAt:prevMeasureIndex] isKindOfClass:[NSNull class]]){
-		if(prevMeasureIndex == 0) return [TimeSignature timeSignatureWithTop:4 bottom:4];
-		prevMeasureIndex--;
-	}
-	return [[self getTimeSignatureAt:prevMeasureIndex] isKindOfClass:[CompoundTimeSig class]];
-}
-
 - (void)refreshTimeSigs{
 	[self willChangeValueForKey:@"timeSigs"];
 	int numMeasures = [self getNumMeasures];
@@ -372,85 +314,35 @@ int enableMIDI = 1;
 }
 
 - (void)soloPressed:(BOOL)solo onStaff:(Staff *)staff{
-	[[staffs do] setCanMute:(!solo)];
-	[staff setCanMute:YES];
+	[[staffs do] muteSoloEnabled:(!solo)];
+	[staff muteSoloEnabled:YES];
 }
 
-- (void)playFeedbackNote:(NoteBase *)note atPosition:(float)pos inMeasure:(Measure *)measure 
-		withExistingNote:existingNote toEndpoint:(MIDIEndpointRef)endpoint{
-	if(playerPosition != -1){
-		return;
-	}
-	BOOL isPlaying;
-	MusicPlayerIsPlaying(feedbackPlayer, &isPlaying);
-	if(isPlaying){
-		MusicPlayerStop(feedbackPlayer);
-	}
-	MusicTrackClear(feedbackTrack, 0.0, MAXFLOAT);
-	NSDictionary *accidentals = [measure getAccidentalsAtPosition:pos];
-	KeySignature *keySig = [measure getEffectiveKeySignature];
-	int channel = [[measure getStaff] realChannel];
-	playerEnd = [note addToMIDITrack:&feedbackTrack atPosition:0 withKeySignature:keySig
-						 accidentals:accidentals transpose:[[measure getStaff] transposition] onChannel:channel];
-	[existingNote addToMIDITrack:&feedbackTrack atPosition:0 withKeySignature:keySig
-					 accidentals:accidentals transpose:[[measure getStaff] transposition] onChannel:channel];
-	MIDIMetaEvent metaEvent = { 0x2f, 0, 0, 0, 0, { 0 } };
-	if (MusicTrackNewMetaEvent(feedbackTrack, 13.0, &metaEvent) != noErr) {
-		NSLog(@"Cannot add end of track meta event to track.");
-		return;
-	}
-	if(endpoint != nil){
-		if (MusicSequenceSetMIDIEndpoint(feedbackSequence, endpoint) != noErr)
-			[NSException raise:@"setMIDIEndpoint" format:@"Can't set midi endpoint for music sequence"];
-	}
-	
-	MusicPlayerSetTime(feedbackPlayer, 0.0);
-	
-	if (MusicPlayerStart(feedbackPlayer) != noErr) {
-		NSLog(@"Cannot start music player - %d.", MusicPlayerStart(feedbackPlayer));
-	}
-
-}
-
-- (float)addTracksToSequenceWithSelection:(id)selection includeAll:(BOOL)includeAll{
+- (void)playToEndpoint:(MIDIEndpointRef)endpoint{
+	MusicSequence musicSequence;
+	if (NewMusicSequence(&musicSequence) != noErr)
+		[NSException raise:@"main" format:@"Cannot create music sequence."];
 	NSEnumerator *staffsEnum = [staffs objectEnumerator];
-	playerOffset = 0;
 	float maxLength = 0;
 	id staff;
 	while(staff = [staffsEnum nextObject]){
-		if(includeAll || ![staff mute]){
-			float length = [staff addTrackToMIDISequence:&musicSequence notesToPlay:selection];
+		if(![staff isMute]){
+			float length = [staff addTrackToMIDISequence:&musicSequence];
 			if(length > maxLength){
 				maxLength = length;
 			}
-			if(selection != nil && length > 0){
-				NSEnumerator *measures = [[staff getMeasures] objectEnumerator];
-				id measure;
-				BOOL found = NO;
-				while(measure = [measures nextObject]){
-					NSEnumerator *notes = [[measure getNotes] objectEnumerator];
-					id note;
-					while(note = [notes nextObject]){
-						if(note == selection || ([selection respondsToSelector:@selector(containsObject:)] && [selection containsObject:note])){
-							found = YES;
-							break;
-						}
-						playerOffset += 4.0 * [note getEffectiveDuration] / 3;
-					}
-					if(found){
-						break;
-					}
-				}
-			}
 		}
-		if([staff solo] && !includeAll){
+		if([staff isSolo]){
 			break;
 		}
 	}
+
+	playerEnd = maxLength + 5; // add 5 beats for decay
+	
 	MusicTrack tempoTrack;
 	if (MusicSequenceGetTempoTrack(musicSequence, &tempoTrack) != noErr)
 		[NSException raise:@"main" format:@"Cannot get tempo track."];
-	
+
 	NSEnumerator *tempoEnum = [tempoData objectEnumerator];
 	id tempo;
 	float time = 0;
@@ -469,31 +361,21 @@ int enableMIDI = 1;
 		i++;
 	}
 	
-	return maxLength;
-}
-
-- (void)cleanMIDI{
-	int tracks;
-	
-	int i = 0;
-	for(MusicSequenceGetTrackCount(musicSequence, &tracks); tracks > 0; MusicSequenceGetTrackCount(musicSequence, &tracks)){
-		MusicTrack track;
-		MusicSequenceGetIndTrack(musicSequence, 0, &track);
-		MusicSequenceDisposeTrack(musicSequence, track);
-	}	
-}
-
-- (void)playToEndpoint:(MIDIEndpointRef)endpoint notesToPlay:(id)selection{
-
-	float maxLength = [self addTracksToSequenceWithSelection:selection includeAll:NO];
-	
-	playerEnd = maxLength + 5; // add 5 beats for decay
-	
 	if(endpoint != nil){
 		if (MusicSequenceSetMIDIEndpoint(musicSequence, endpoint) != noErr)
 			[NSException raise:@"setMIDIEndpoint" format:@"Can't set midi endpoint for music sequence"];
 	}
 	
+	if (NewMusicPlayer(&musicPlayer) != noErr) {
+		NSLog(@"Cannot create music player.");
+		return;
+	}
+
+	if (MusicPlayerSetSequence(musicPlayer, musicSequence) != noErr) {
+		NSLog(@"Cannot set sequence for music player.");
+		return;
+	}
+
 	MusicPlayerSetTime(musicPlayer, 0.0);
 	MusicPlayerPreroll(musicPlayer);
 
@@ -508,10 +390,6 @@ int enableMIDI = 1;
 	
 }
 
-- (void)playToEndpoint:(MIDIEndpointRef)endpoint{
-	[self playToEndpoint:endpoint notesToPlay:nil];
-}
-
 - (void)stopPlaying{
 	if(musicPlayerPoll != nil){
 		[musicPlayerPoll invalidate];
@@ -523,7 +401,6 @@ int enableMIDI = 1;
 		NSLog(@"Cannot stop music player.");
 		return;
 	}
-	[self cleanMIDI];
 }
 
 - (void)pollMusicPlayer:(NSTimer *)timer{
@@ -536,68 +413,7 @@ int enableMIDI = 1;
 }
 
 - (double)getPlayerPosition{
-	return playerOffset + playerPosition;
-}
-
-- (double)getPlayerEnd{
-	return playerOffset + playerEnd;
-}
-
-- (NSData *)asMIDIData{
-	[self stopPlaying];
-	[self addTracksToSequenceWithSelection:nil includeAll:YES];
-	NSData *data;
-#ifdef __BIG_ENDIAN__
-	CFDataRef dataRef;
-	if (MusicSequenceSaveSMFData(musicSequence, &dataRef, 480) != noErr) {
-		[NSException raise:@"main" format:@"Cannot save SMF data."];
-	}
-	data = [(NSData *)dataRef autorelease];
-#else
-	data = [MIDIUtil writeSequenceToData:musicSequence];
-#endif
-	[self cleanMIDI];
-	return data;
-}
-
-- (NSData *)asLilypond{
-	NSMutableString *string = [NSMutableString string];
-	[string appendString:@"\\version \"2.10.25\"\n"];
-	[string appendString:@"\\score {\n<<\n"];
-	[[staffs do] addToLilypondString:string];
-	[string appendString:@">>\n}\n"];
-	return [string dataUsingEncoding:NSUTF8StringEncoding];
-}
-
-- (void) appendMusicXMLHeaderToString:(NSMutableString *)string forStaff:(Staff *)staff{
-	[string appendFormat:@"<score-part id=\"P%d\">\n", [staffs indexOfObject:staff]];
-	[string appendFormat:@"<part-name>%@</part-name>\n", [staff name]];
-	if([staff isDrums]){
-		[[staff drumKit] appendMusicXMLHeaderToString:string];
-	} else {
-		[string appendFormat:@"<midi-instrument id=\"P%dI\">\n", [staffs indexOfObject:staff]];
-		[string appendFormat:@"<midi-channel>%d</midi-channel>\n", [staff channel]];
-		[string appendString:@"</midi-instrument>\n"];
-	}
-	[string appendString:@"</score-part>\n"];
-}
-
-- (void) appendMusicXMLToString:(NSMutableString *)string forStaff:(Staff *)staff{
-	[string appendFormat:@"<part id=\"P%d\">\n", [staffs indexOfObject:staff]];
-	[staff addToMusicXMLString:string];
-	[string appendString:@"</part>\n"];
-}
-
-- (NSData *)asMusicXML{
-	NSMutableString *string = [NSMutableString string];
-	[string appendString:@"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE score-partwise PUBLIC \"-//Recordare//DTD MusicXML 1.1 Partwise//EN\" \"http://www.musicxml.org/dtds/partwise.dtd\">"];
-	[string appendString:@"<score-partwise version=\"1.1\">\n"];
-	[string appendString:@"<part-list>\n"];
-	[[self doSelf] appendMusicXMLHeaderToString:string forStaff:[staffs each]];
-	[string appendString:@"</part-list>\n"];
-	[[self doSelf] appendMusicXMLToString:string forStaff:[staffs each]];
-	[string appendString:@"</score-partwise>"];
-	return [string dataUsingEncoding:NSUTF8StringEncoding];
+	return playerPosition;
 }
 
 - (void)encodeWithCoder:(NSCoder *)coder{
@@ -622,7 +438,6 @@ int enableMIDI = 1;
 		[self refreshTimeSigs];
 		[self setRepeats:[coder decodeObjectForKey:@"repeats"]];
 		playerPosition = -1;
-		[self initMIDI];
 	}
 	return self;
 }

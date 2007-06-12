@@ -19,9 +19,6 @@
 #import "ClefTarget.h"
 #import "Clef.h"
 #import "Rest.h"
-#import "Note.h"
-
-NSMutableDictionary *cachedMeasureWidths = nil;
 
 @implementation MeasureController
 
@@ -66,13 +63,6 @@ NSMutableDictionary *cachedMeasureWidths = nil;
 }
 
 + (float)widthOf:(Measure *)measure{
-	if(cachedMeasureWidths == nil){
-		cachedMeasureWidths = [[NSMutableDictionary dictionary] retain];
-	}
-	NSNumber *width = [cachedMeasureWidths objectForKey:[NSNumber numberWithInt:measure]];
-	if(width != nil){
-		return [width floatValue];
-	}
 	float max = 0;
 	int index = [[[measure getStaff] getMeasures] indexOfObject:measure];
 	NSEnumerator *staffs = [[[[measure getStaff] getSong] staffs] objectEnumerator];
@@ -83,7 +73,6 @@ NSMutableDictionary *cachedMeasureWidths = nil;
 			if(width > max) max = width;
 		}
 	}
-	[cachedMeasureWidths setObject:[NSNumber numberWithFloat:max] forKey:[NSNumber numberWithInt:measure]];
 	return max;	
 }
 
@@ -116,7 +105,7 @@ NSMutableDictionary *cachedMeasureWidths = nil;
 
 + (int)positionAt:(NSPoint)location inMeasure:(Measure *)measure{
 	Staff *staff = [measure getStaff];
-	return floor(([StaffController baseOf:staff] - [StaffController topOf:staff] - location.y) / [StaffController lineHeightOf:staff]);
+	return ([StaffController baseOf:staff] - [StaffController topOf:staff] - location.y) / [StaffController lineHeightOf:staff];
 }
 
 + (int)octaveAt:(NSPoint)location inMeasure:(Measure *)measure{
@@ -211,23 +200,23 @@ NSMutableDictionary *cachedMeasureWidths = nil;
 
 + (NSPoint) keySigPanelLocationFor:(Measure *)measure{
 	NSPoint location;
-	location.x = (int)([self xOf:measure] + [ClefController widthOf:[measure getClef]] + [TimeSignatureController widthOf:[measure getTimeSignature]]);
-	location.y = (int)([StaffController topOf:[measure getStaff]]);
+	location.x = [self xOf:measure] + [ClefController widthOf:[measure getClef]] + [TimeSignatureController widthOf:[measure getTimeSignature]];
+	location.y = [StaffController topOf:[measure getStaff]];
 	return location;
 }
 
 + (NSPoint) timeSigPanelLocationFor:(Measure *)measure{
 	NSPoint location;
-	location.x = (int)([self xOf:measure] + [ClefController widthOf:[measure getClef]]);
-	location.y = (int)([StaffController topOf:[measure getStaff]]);
+	location.x = [self xOf:measure] + [ClefController widthOf:[measure getClef]];
+	location.y = [StaffController topOf:[measure getStaff]];
 	return location;
 }
 
 + (NSPoint) repeatPanelLocationFor:(Measure *)measure{
 	NSPoint location;
 	NSRect bounds = [MeasureController boundsOf:measure];
-	location.x = (int)(bounds.origin.x + bounds.size.width - 10);
-	location.y = (int)([StaffController topOf:[measure getStaff]]);
+	location.x = bounds.origin.x + bounds.size.width - 10;
+	location.y = [StaffController topOf:[measure getStaff]];
 	return location;
 }
 
@@ -284,37 +273,6 @@ NSMutableDictionary *cachedMeasureWidths = nil;
 	return [clef positionIsValid:[self positionAt:location inMeasure:measure]];
 }
 
-+ (NSString *)getCommandListFor:(Measure *)measure at:(NSPoint)location mode:(NSDictionary *)mode{
-	NSMutableArray *commands = [NSMutableArray array];
-	location.x -= [self xOf:measure];
-	location.y -= [self boundsOf:measure].origin.y;
-	if([self isOverStartRepeat:location inMeasure:measure]){
-		if(![measure isStartRepeat]){
-			[commands addObject:@"click - start repeat"];
-		} else {
-			[commands addObject:@"DELETE - delete repeat"];
-		}
-	} else if([measure followsOpenRepeat]){
-		[commands addObject:@"click - end repeat"];
-	} else if([measure isEndRepeat] && [self isOverEndRepeat:location inMeasure:measure]){
-		[commands addObject:@"click - edit repeat"];
-		[commands addObject:@"DELETE - delete repeat"];
-	} else {
-		int pointerMode = [[mode objectForKey:@"pointerMode"] intValue];
-		if(pointerMode == MODE_NOTE){
-			int pitch = [self pitchAt:location inMeasure:measure];
-			int octave = [self octaveAt:location inMeasure:measure];
-			if([self canPlaceNoteAt:location inMeasure:measure]){
-				[commands addObject:@"click - add note"];
-			}
-			[commands addObject:@"SPACE - add rest"];
-		} else if([[measure getNotes] count] > 0){
-			[commands addObject:@"dbl-click - select measure"];
-		}
-	}
-	return [commands componentsJoinedByString:@"\n"];
-}
-
 + (void)handleMouseClick:(NSEvent *)event at:(NSPoint)location on:(Measure *)measure mode:(NSDictionary *)mode view:(ScoreView *)view{
 	if([event clickCount] < 2 && !([event modifierFlags] & NSShiftKeyMask)){
 		[view setSelection:nil];
@@ -329,7 +287,7 @@ NSMutableDictionary *cachedMeasureWidths = nil;
 		[measure setEndRepeat:2];
 	} else if([measure isEndRepeat] && [self isOverEndRepeat:location inMeasure:measure]){
 		[view showRepeatCountPanelFor:[measure getRepeatEndingHere] inMeasure:measure];
-	} else if([event clickCount] == 2 && [[measure getNotes] count] > 0){
+	} else if([event clickCount] == 2){
 		if(([event modifierFlags] & NSShiftKeyMask) && [view selection] != nil){
 			[view setSelection:[[measure getStaff] notesBetweenNote:[view selection] andNote:[measure getNotes]]];			
 		} else {
@@ -385,37 +343,12 @@ NSMutableDictionary *cachedMeasureWidths = nil;
 	}
 	int pointerMode = [[mode objectForKey:@"pointerMode"] intValue];
 	int duration = [[mode objectForKey:@"duration"] intValue];
-	if([[mode objectForKey:@"triplet"] boolValue]){
-		duration = duration * 3 / 2;
-	}
 	BOOL dotted = [[mode objectForKey:@"dotted"] boolValue];
 	if(pointerMode == MODE_NOTE && [[event characters] isEqualToString:@" "]){
-		Rest *rest = [[[Rest alloc] initWithDuration:duration dotted:dotted onStaff:[measure getStaff]] autorelease];
+		Rest *rest = [[Rest alloc] initWithDuration:duration dotted:dotted onStaff:[measure getStaff]];
 		[measure addNote:rest atIndex:[self indexAt:location inMeasure:measure] tieToPrev:NO];
 		if([measure isFull]) [[measure getStaff] getMeasureAfter:measure createNew:YES];
 		[self scrollView:view toShowMeasure:[[rest getStaff] getMeasureContainingNote:rest]];
-		return YES;
-	}
-	if([[event characters] characterAtIndex:0] >= 'a' && [[event characters] characterAtIndex:0] <= 'g'){
-		int noteRank = [[event characters] characterAtIndex:0] - 'a';
-		float index = [self indexAt:location inMeasure:measure];
-		Note *lastNote = nil;
-		if(index < 0 && [[measure getStaff] getMeasureBefore:measure] != nil){
-			lastNote = [[[[measure getStaff] getMeasureBefore:measure] getNotes] lastObject];
-		} else if(((int)index) < [[measure getNotes] count]){
-			lastNote = [[measure getNotes] objectAtIndex:((int)index)];
-		}
-		NSPoint pitchAndOctave;
-		if(lastNote != nil){
-			pitchAndOctave = [lastNote closestNoteAtRank:noteRank];
-		} else {
-			pitchAndOctave = [Note noteAtRank:noteRank onClef:[measure getEffectiveClef]];
-		}
-		Note *newNote = [[[Note alloc] initWithPitch:pitchAndOctave.x octave:pitchAndOctave.y duration:duration dotted:dotted
-										  accidental:[[mode objectForKey:@"accidental"] intValue] onStaff:[measure getStaff]] autorelease];
-		[measure addNote:newNote atIndex:index tieToPrev:[[mode objectForKey:@"tieToPrev"] boolValue]];
-		if([measure isFull]) [[measure getStaff] getMeasureAfter:measure createNew:YES];
-		[self scrollView:view toShowMeasure:[[newNote getStaff] getMeasureContainingNote:newNote]];
 		return YES;
 	}
 	return NO;
@@ -441,12 +374,6 @@ NSMutableDictionary *cachedMeasureWidths = nil;
 		[[self doSelf] cleanNoteForPaste:[data each] inMeasure:measure preserveTiesWithin:data];
 		[measure addNotes:data atIndex:[self indexAt:location inMeasure:measure]];
 		[[measure undoManager] setActionName:@"pasting notes"];
-	}
-}
-
-+ (void)clearCaches{
-	if(cachedMeasureWidths != nil){
-		[cachedMeasureWidths removeAllObjects];
 	}
 }
 

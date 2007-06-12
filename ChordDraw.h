@@ -9,9 +9,8 @@
 #import <Cocoa/Cocoa.h>
 @class Chord;
 @class Measure;
-#import "NoteDraw.h"
 
-@interface ChordDraw : NoteDraw {
+@interface ChordDraw : NSObject {
 
 }
 
