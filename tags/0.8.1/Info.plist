@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>sstf</string>
+			</array>
+			<key>CFBundleTypeIconFile</key>
+			<string>doc</string>
+			<key>CFBundleTypeName</key>
+			<string>Señor Staff document</string>
+			<key>CFBundleTypeOSTypes</key>
+			<array>
+				<string>SSTF</string>
+			</array>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>NSDocumentClass</key>
+			<string>MusicDocument</string>
+			<key>NSExportableAs</key>
+			<array>
+				<string>MIDI file</string>
+				<string>LilyPond file</string>
+				<string>MusicXML file</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>mid</string>
+			</array>
+			<key>CFBundleTypeMIMETypes</key>
+			<array>
+				<string>audio/midi</string>
+			</array>
+			<key>CFBundleTypeName</key>
+			<string>MIDI file</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSTypeIsPackage</key>
+			<false/>
+			<key>NSDocumentClass</key>
+			<string>MusicDocument</string>
+			<key>NSPersistentStoreTypeKey</key>
+			<string>Binary</string>
+		</dict>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>ly</string>
+			</array>
+			<key>CFBundleTypeName</key>
+			<string>LilyPond file</string>
+			<key>CFBundleTypeRole</key>
+			<string>None</string>
+			<key>LSTypeIsPackage</key>
+			<false/>
+			<key>NSDocumentClass</key>
+			<string>MusicDocument</string>
+			<key>NSPersistentStoreTypeKey</key>
+			<string>Binary</string>
+		</dict>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>xml</string>
+			</array>
+			<key>CFBundleTypeMIMETypes</key>
+			<array>
+				<string>text.xml</string>
+			</array>
+			<key>CFBundleTypeName</key>
+			<string>MusicXML file</string>
+			<key>CFBundleTypeRole</key>
+			<string>None</string>
+			<key>LSTypeIsPackage</key>
+			<false/>
+			<key>NSDocumentClass</key>
+			<string>MusicDocument</string>
+			<key>NSPersistentStoreTypeKey</key>
+			<string>XML</string>
+		</dict>
+	</array>
+	<key>CFBundleExecutable</key>
+	<string>Señor Staff</string>
+	<key>CFBundleHelpBookFolder</key>
+	<string>Senor Staff Help</string>
+	<key>CFBundleHelpBookName</key>
+	<string>Senor Staff Help</string>
+	<key>CFBundleIconFile</key>
+	<string>sstaff</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.gusprevas.SeñorStaff</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>Señor Staff</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleSignature</key>
+	<string>SSTF</string>
+	<key>CFBundleVersion</key>
+	<string>0.8.2</string>
+	<key>NSMainNibFile</key>
+	<string>MainMenu</string>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
+	<key>SUFeedURL</key>
+	<string>http://www.gusprevas.com/senorstaff/dl/updates.xml</string>
+</dict>
+</plist>

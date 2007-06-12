@@ -1,0 +1,71 @@
+{
+    IBClasses = (
+        {CLASS = CAMIDIEndpointMenu; LANGUAGE = ObjC; SUPERCLASS = NSPopUpButton; }, 
+        {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {
+            ACTIONS = {
+                addStaff = id; 
+                changeAccidental = id; 
+                changeDotted = id; 
+                changeDuration = id; 
+                changeTriplet = id; 
+                setZoom = id; 
+                toggleKeyHelpVisible = id; 
+            }; 
+            CLASS = MEWindowController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                accidentalView = NSView; 
+                dotted = NSButton; 
+                duration = NSPopUpButton; 
+                durationView = NSView; 
+                flat = NSButton; 
+                horizontalRuler = NSView; 
+                horizontalRulerScroll = NSScrollView; 
+                natural = NSButton; 
+                scrollView = NSScrollView; 
+                sharp = NSButton; 
+                tieToPrev = NSButton; 
+                triplet = NSButton; 
+                verticalRuler = NSView; 
+                verticalRulerScroll = NSScrollView; 
+                view = ScoreView; 
+            }; 
+            SUPERCLASS = ToolbarHelperController; 
+        }, 
+        {CLASS = MusicDocument; LANGUAGE = ObjC; SUPERCLASS = NSDocument; }, 
+        {
+            CLASS = NonScrollableScrollView; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {owner = NSView; }; 
+            SUPERCLASS = NSScrollView; 
+        }, 
+        {CLASS = OpaqueBox; LANGUAGE = ObjC; SUPERCLASS = NSBox; }, 
+        {
+            CLASS = ScoreView; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {clickTarget = id; helpBox = NSBox; mouseOver = id; selection = id; }; 
+            SUPERCLASS = NSView; 
+        }, 
+        {CLASS = Song; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {
+            ACTIONS = {setZoom = id; }; 
+            CLASS = StaffVerticalRuler; 
+            LANGUAGE = ObjC; 
+            SUPERCLASS = NSView; 
+        }, 
+        {
+            ACTIONS = {setZoom = id; }; 
+            CLASS = StaffVerticalRulerComponent; 
+            LANGUAGE = ObjC; 
+            SUPERCLASS = NSView; 
+        }, 
+        {CLASS = StaffView; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
+        {
+            CLASS = ToolbarHelperController; 
+            LANGUAGE = ObjC; 
+            SUPERCLASS = NSWindowController; 
+        }
+    ); 
+    IBVersion = 1; 
+}
