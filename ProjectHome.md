@@ -1,0 +1,1 @@
+Señor Staff is a music composition app for Mac OS X.  It features a staff-based interface (rather than a tracker interface) for natural entry and readability, and supports playback to any MIDI device.  Emphasis is placed on user efficiency and automated enforcement of musical constraints.
